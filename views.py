@@ -45,8 +45,8 @@ class RemoveTransactionHistoryView(AbstractAuthenticatedView):
 			   renderer='rest',
 			   request_method='POST',
 			   context=IRecordable,
-			   name='GetTransactionHistory')
-class GetTransactionHistoryView(AbstractAuthenticatedView):
+			   name='TransactionHistory')
+class TransactionHistoryView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		result = LocatedExternalDict()
