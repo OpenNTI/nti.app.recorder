@@ -15,4 +15,9 @@
 				for="nti.recorder.interfaces.ITransactionRecord
 					pyramid.interfaces.IRequest"/>
 
+	<subscriber factory=".decorators._RecordableDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.coremetadata.interfaces.IRecordable
+					pyramid.interfaces.IRequest"/>
+
 </configure>

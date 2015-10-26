@@ -26,6 +26,7 @@ from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
+from nti.common.time import time_to_64bit_int
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.coremetadata.interfaces import IRecordable
@@ -117,16 +118,17 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 			raise hexc.HTTPUnprocessableEntity("Must provide a username")
 
 		startTime = values.get('startTime') or values.get('startDate') or 0
+		startTime = time_to_64bit_int(parse_datetime(startTime))
 		endTime = values.get('endTime') or values.get('endDate') or time.time()
-
+		endTime = time_to_64bit_int(parse_datetime(endTime))
+		
 		intids = component.getUtility(IIntIds)
 		result = LocatedExternalDict()
 		items = result[ITEMS] = {}
 		catalog = get_recorder_catalog()
 		query = {
 			IX_PRINCIPAL:{'any_of':usernames},
-			IX_CREATEDTIME:{'between':(parse_datetime(startTime),
-									   parse_datetime(endTime))}
+			IX_CREATEDTIME:{'between':(startTime, endTime)}
 		}
 		for uid in catalog.apply(query) or ():
 			context = intids.queryObject(uid)
