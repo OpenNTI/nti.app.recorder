@@ -25,10 +25,9 @@ from nti.dataserver.authorization import ACT_UPDATE
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalMappingDecorator
 
-from nti.externalization.externalization import to_external_object
-
 from nti.links.links import Link
 
+from nti.recorder.utils import decompress
 from nti.recorder.interfaces import ITransactionRecord
 
 LINKS = StandardExternalFields.LINKS
@@ -38,9 +37,9 @@ LINKS = StandardExternalFields.LINKS
 class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _do_decorate_external(self, context, result):
-		target = context.__parent__
-		if target is not None:
-			result['Target'] = to_external_object(target)
+		ext_value = context.external_value
+		if ext_value is not None:
+			result['ExternalValue'] = decompress(ext_value)
 
 @component.adapter(IRecordable)
 @interface.implementer(IExternalMappingDecorator)
