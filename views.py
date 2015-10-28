@@ -20,6 +20,13 @@ from nti.coremetadata.interfaces import IRecordable
 
 from nti.dataserver.authorization import ACT_UPDATE
 
+from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import StandardExternalFields
+
+from nti.recorder import get_transactions
+
+ITEMS = StandardExternalFields.ITEMS
+
 @view_config(permission=ACT_UPDATE)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
@@ -43,3 +50,16 @@ class LockObjectView(AbstractAuthenticatedView):
 	def __call__(self):
 		self.context.locked = True
 		return hexc.HTTPNoContent()
+
+@view_config(permission=ACT_UPDATE)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET',
+			   context=IRecordable,
+			   name='TransactionHistory')
+class TransactionHistoryView(AbstractAuthenticatedView):
+
+	def __call__(self):
+		result = LocatedExternalDict()
+		result[ITEMS] = get_transactions(self.context)
+		return result

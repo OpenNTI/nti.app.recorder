@@ -34,7 +34,6 @@ from nti.coremetadata.interfaces import IRecordable
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IShardLayout
 
-from nti.recorder import get_transactions
 from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder import get_recorder_catalog
@@ -58,19 +57,6 @@ class RemoveTransactionHistoryView(AbstractAuthenticatedView):
 	def __call__(self):
 		remove_transaction_history(self.context)
 		return hexc.HTTPNoContent()
-
-@view_config(permission=ACT_NTI_ADMIN)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='GET',
-			   context=IRecordable,
-			   name='TransactionHistory')
-class TransactionHistoryView(AbstractAuthenticatedView):
-
-	def __call__(self):
-		result = LocatedExternalDict()
-		result[ITEMS] = get_transactions(self.context)
-		return result
 
 def _make_min_max_btree_range(search_term):
 	min_inclusive = search_term  # start here
