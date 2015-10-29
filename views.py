@@ -31,7 +31,7 @@ ITEMS = StandardExternalFields.ITEMS
 			   renderer='rest',
 			   request_method='POST',
 			   context=IRecordable,
-			   name='Unlock')
+			   name='SyncUnlock')
 class UnlockObjectView(AbstractAuthenticatedView):
 
 	def __call__(self):
@@ -43,7 +43,7 @@ class UnlockObjectView(AbstractAuthenticatedView):
 			   renderer='rest',
 			   request_method='POST',
 			   context=IRecordable,
-			   name='lock')
+			   name='SyncLock')
 class LockObjectView(AbstractAuthenticatedView):
 
 	def __call__(self):

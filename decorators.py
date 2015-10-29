@@ -51,14 +51,13 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _do_decorate_external(self, context, result):
 		added = []
-		result['locked'] = context.locked
 		_links = result.setdefault(LINKS, [])
 		
 		# lock/unlock
 		if not context.locked:
-			link = Link(context, rel='lock', elements=('Lock',))
+			link = Link(context, rel='SyncLock', elements=('SyncLock',))
 		else:
-			link = Link(context, rel='Unlock', elements=('Unlock',))
+			link = Link(context, rel='SyncUnlock', elements=('SyncUnlock',))
 		added.append(link)
 		
 		# audit log
