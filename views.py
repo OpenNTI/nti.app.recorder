@@ -50,12 +50,13 @@ class LockObjectView(AbstractAuthenticatedView):
 		self.context.locked = True
 		return hexc.HTTPNoContent()
 
+@view_config(name='audit_log')
+@view_config(name='TransactionHistory')
 @view_config(permission=ACT_UPDATE)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='GET',
-			   context=IRecordable,
-			   name='TransactionHistory')
+			   context=IRecordable)
 class TransactionHistoryView(AbstractAuthenticatedView):
 
 	def __call__(self):

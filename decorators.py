@@ -50,14 +50,24 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 				has_permission(ACT_UPDATE, context, self.request)
 
 	def _do_decorate_external(self, context, result):
+		added = []
 		result['locked'] = context.locked
 		_links = result.setdefault(LINKS, [])
+		
+		# lock/unlock
 		if not context.locked:
 			link = Link(context, rel='lock', elements=('Lock',))
 		else:
 			link = Link(context, rel='Unlock', elements=('Unlock',))
-		interface.alsoProvides(link, ILocation)
-		link.__name__ = ''
-		link.__parent__ = context
-		_links.append(link)
-		_links.append(link)
+		added.append(link)
+		
+		# audit log
+		link = Link(context, rel='audit_log', elements=('audit_log',))
+		added.append(link)
+		
+		# add links
+		for link in added:
+			interface.alsoProvides(link, ILocation)
+			link.__name__ = ''
+			link.__parent__ = context
+			_links.append(link)
