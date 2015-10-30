@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import lifecycleevent
+
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
@@ -36,6 +38,7 @@ class UnlockObjectView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		self.context.locked = False
+		lifecycleevent.modified(self.context)
 		return hexc.HTTPNoContent()
 
 @view_config(permission=ACT_UPDATE)
@@ -48,6 +51,7 @@ class LockObjectView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		self.context.locked = True
+		lifecycleevent.modified(self.context)
 		return hexc.HTTPNoContent()
 
 @view_config(name='audit_log')
