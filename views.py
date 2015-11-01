@@ -34,7 +34,7 @@ ITEMS = StandardExternalFields.ITEMS
 			   request_method='POST',
 			   context=IRecordable,
 			   name='SyncUnlock')
-class UnlockObjectView(AbstractAuthenticatedView):
+class SyncUnlockObjectView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		self.context.locked = False
@@ -47,7 +47,7 @@ class UnlockObjectView(AbstractAuthenticatedView):
 			   request_method='POST',
 			   context=IRecordable,
 			   name='SyncLock')
-class LockObjectView(AbstractAuthenticatedView):
+class SyncLockObjectView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		self.context.locked = True

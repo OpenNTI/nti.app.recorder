@@ -33,15 +33,20 @@ from nti.coremetadata.interfaces import IRecordable
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IShardLayout
 
+from nti.recorder.index import IX_SITE
 from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
+
 from nti.recorder import get_recorder_catalog
-from nti.recorder import remove_transaction_history
+from nti.recorder.record import get_transactions
+from nti.recorder.record import remove_transaction_history
 
 from nti.dataserver.authorization import ACT_NTI_ADMIN
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
+
+from nti.site.site import get_component_hierarchy_names
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -54,8 +59,10 @@ ITEMS = StandardExternalFields.ITEMS
 class RemoveTransactionHistoryView(AbstractAuthenticatedView):
 
 	def __call__(self):
+		result = LocatedExternalDict()
+		result[ITEMS] = get_transactions(self.context, sort=True)
 		remove_transaction_history(self.context)
-		return hexc.HTTPNoContent()
+		return result
 
 def _make_min_max_btree_range(search_term):
 	min_inclusive = search_term  # start here
@@ -113,7 +120,8 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		catalog = get_recorder_catalog()
 		query = {
 			IX_PRINCIPAL:{'any_of':usernames},
-			IX_CREATEDTIME:{'between':(startTime, endTime)}
+			IX_CREATEDTIME:{'between':(startTime, endTime)},
+			IX_SITE:{'any_of':get_component_hierarchy_names()},
 		}
 		for uid in catalog.apply(query) or ():
 			context = intids.queryObject(uid)
