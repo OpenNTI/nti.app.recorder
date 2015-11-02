@@ -39,7 +39,10 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	def _do_decorate_external(self, context, result):
 		ext_value = context.external_value
 		if ext_value is not None:
-			result['ExternalValue'] = decompress(ext_value)
+			try:
+				result['ExternalValue'] = decompress(ext_value)
+			except Exception:
+				pass
 
 @component.adapter(IRecordable)
 @interface.implementer(IExternalMappingDecorator)

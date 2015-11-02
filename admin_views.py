@@ -25,7 +25,6 @@ from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
-from nti.common.time import time_to_64bit_int
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.coremetadata.interfaces import IRecordable
@@ -109,10 +108,10 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		if not usernames:
 			raise hexc.HTTPUnprocessableEntity("Must provide a username")
 
-		startTime = values.get('startTime') or values.get('startDate') or 0
-		startTime = time_to_64bit_int(parse_datetime(startTime))
-		endTime = values.get('endTime') or values.get('endDate') or time.time()
-		endTime = time_to_64bit_int(parse_datetime(endTime))
+		startTime = values.get('startTime') or values.get('startDate')
+		startTime = parse_datetime(startTime) if startTime is not None else None
+		endTime = values.get('endTime') or values.get('endDate')
+		endTime = parse_datetime(endTime) if endTime is not None else None
 		
 		intids = component.getUtility(IIntIds)
 		result = LocatedExternalDict()
