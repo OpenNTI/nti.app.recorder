@@ -54,6 +54,19 @@ class SyncLockObjectView(AbstractAuthenticatedView):
 		lifecycleevent.modified(self.context)
 		return hexc.HTTPNoContent()
 
+@view_config(route_name='objects.generic.traversal',
+			 renderer='rest',
+			 request_method='GET',
+			 context=IRecordable,
+			 permission=ACT_UPDATE,
+			 name='SyncLockStatus')
+class SyncLockObjectStatusView(AbstractAuthenticatedView):
+
+	def __call__(self):
+		result = LocatedExternalDict()
+		result['Locked'] = self.context.locked
+		return result
+
 @view_config(name='audit_log')
 @view_config(name='TransactionHistory')
 @view_defaults(route_name='objects.generic.traversal',
