@@ -16,6 +16,7 @@ from datetime import date
 from datetime import datetime
 
 from zope import component
+from zope import lifecycleevent
 
 from zope.intid import IIntIds
 
@@ -52,15 +53,16 @@ ITEMS = StandardExternalFields.ITEMS
 @view_config(permission=ACT_NTI_ADMIN)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   request_method='POST',
 			   context=IRecordable,
 			   name='RemoveTransactionHistory')
 class RemoveTransactionHistoryView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		result = LocatedExternalDict()
+		self.context.locked = False
 		result[ITEMS] = get_transactions(self.context, sort=True)
 		remove_transaction_history(self.context)
+		lifecycleevent.modified(self.context)
 		return result
 
 def _make_min_max_btree_range(search_term):
@@ -112,7 +114,7 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		startTime = parse_datetime(startTime) if startTime is not None else None
 		endTime = values.get('endTime') or values.get('endDate')
 		endTime = parse_datetime(endTime) if endTime is not None else None
-		
+
 		intids = component.getUtility(IIntIds)
 		result = LocatedExternalDict()
 		items = result[ITEMS] = {}
