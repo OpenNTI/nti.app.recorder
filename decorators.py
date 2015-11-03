@@ -18,6 +18,8 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.common.property import Lazy
+
 from nti.coremetadata.interfaces import IRecordable
 
 from nti.dataserver.authorization import ACT_UPDATE
@@ -48,8 +50,15 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
 @interface.implementer(IExternalMappingDecorator)
 class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
+	@Lazy
+	def _no_acl_decoration_in_request(self):
+		request = self.request
+		result = getattr(request, 'no_acl_decoration', False)
+		return result
+
 	def _predicate(self, context, result):
-		return 	bool(self.authenticated_userid) and \
+		return 	not self._no_acl_decoration_in_request and \
+				bool(self.authenticated_userid) and \
 				has_permission(ACT_UPDATE, context, self.request)
 
 	def _do_decorate_external(self, context, result):
