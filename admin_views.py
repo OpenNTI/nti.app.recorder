@@ -33,7 +33,6 @@ from nti.coremetadata.interfaces import IRecordable
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IShardLayout
 
-from nti.recorder.index import IX_SITE
 from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
 
@@ -45,8 +44,6 @@ from nti.dataserver.authorization import ACT_NTI_ADMIN
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
-
-from nti.site.site import get_component_hierarchy_names
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -122,7 +119,6 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		query = {
 			IX_PRINCIPAL:{'any_of':usernames},
 			IX_CREATEDTIME:{'between':(startTime, endTime)},
-			IX_SITE:{'any_of':get_component_hierarchy_names()},
 		}
 		for uid in catalog.apply(query) or ():
 			context = intids.queryObject(uid)
