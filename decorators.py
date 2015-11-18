@@ -67,13 +67,13 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		
 		# lock/unlock
 		if not context.locked:
-			link = Link(context, rel='SyncLock', elements=('SyncLock',))
+			link = Link(context, rel='SyncLock', elements=('@@SyncLock',))
 		else:
-			link = Link(context, rel='SyncUnlock', elements=('SyncUnlock',))
+			link = Link(context, rel='SyncUnlock', elements=('@@SyncUnlock',))
 		added.append(link)
 		
 		# audit log
-		link = Link(context, rel='audit_log', elements=('audit_log',))
+		link = Link(context, rel='audit_log', elements=('@@audit_log',))
 		added.append(link)
 		
 		# add links
