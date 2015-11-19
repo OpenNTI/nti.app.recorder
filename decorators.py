@@ -57,25 +57,29 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		return result
 
 	def _predicate(self, context, result):
-		return 	not self._no_acl_decoration_in_request and \
+		"""
+		Only persistent objects for users that have permission.
+		"""
+		return 	getattr(context, '_p_jar', None) and \
+ 				not self._no_acl_decoration_in_request and \
 				bool(self.authenticated_userid) and \
 				has_permission(ACT_UPDATE, context, self.request)
 
 	def _do_decorate_external(self, context, result):
 		added = []
 		_links = result.setdefault(LINKS, [])
-		
+
 		# lock/unlock
 		if not context.locked:
 			link = Link(context, rel='SyncLock', elements=('@@SyncLock',))
 		else:
 			link = Link(context, rel='SyncUnlock', elements=('@@SyncUnlock',))
 		added.append(link)
-		
+
 		# audit log
 		link = Link(context, rel='audit_log', elements=('@@audit_log',))
 		added.append(link)
-		
+
 		# add links
 		for link in added:
 			interface.alsoProvides(link, ILocation)
