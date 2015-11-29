@@ -51,19 +51,19 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
 class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	@Lazy
-	def _no_acl_decoration_in_request(self):
+	def _acl_decoration(self):
 		request = self.request
-		result = getattr(request, 'no_acl_decoration', False)
+		result = getattr(request, '_acl_decoration', True)
 		return result
 
 	def _predicate(self, context, result):
 		"""
 		Only persistent objects for users that have permission.
 		"""
-		return 	getattr(context, '_p_jar', None) and \
- 				not self._no_acl_decoration_in_request and \
-				bool(self.authenticated_userid) and \
-				has_permission(ACT_UPDATE, context, self.request)
+		return 		self._acl_decoration \
+ 				and bool(self.authenticated_userid) \
+ 				and getattr(context, '_p_jar', None) is not None \
+				and has_permission(ACT_UPDATE, context, self.request)
 
 	def _do_decorate_external(self, context, result):
 		added = []
