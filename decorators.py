@@ -53,7 +53,7 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	@Lazy
 	def _acl_decoration(self):
 		request = self.request
-		result = getattr(request, '_acl_decoration', True)
+		result = getattr(request, 'acl_decoration', True)
 		return result
 
 	def _predicate(self, context, result):
