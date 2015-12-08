@@ -18,6 +18,8 @@ from datetime import datetime
 from zope import component
 from zope import lifecycleevent
 
+from zope.interface.common.idatetime import IDateTime
+
 from zope.intid import IIntIds
 
 from pyramid.view import view_config
@@ -77,7 +79,7 @@ def username_search(search_term):
 def parse_datetime(t):
 	if isinstance(t, six.string_types):
 		try:
-			t = isodate.parse_date(t)
+			t = IDateTime(t)
 		except Exception:
 			t = isodate.parse_datetime(t)
 	if isinstance(t, (date, datetime)):
