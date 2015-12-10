@@ -78,9 +78,10 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 		result = LocatedExternalDict()
 		recordables = get_recordables()
 		for recordable in recordables or ():
-			recordable.locked = False
-			total += remove_transaction_history(recordable)
-			lifecycleevent.modified(recordable)
+			if recordable.locked:
+				recordable.locked = False
+				total += remove_transaction_history(recordable)
+				lifecycleevent.modified(recordable)
 		result['Total'] = total
 		return result
 
