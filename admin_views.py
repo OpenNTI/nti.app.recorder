@@ -129,10 +129,10 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		if not usernames:
 			raise hexc.HTTPUnprocessableEntity("Must provide a username")
 
-		startTime = values.get('startTime') or values.get('startDate')
-		startTime = parse_datetime(startTime) if startTime is not None else None
 		endTime = values.get('endTime') or values.get('endDate')
+		startTime = values.get('startTime') or values.get('startDate')
 		endTime = parse_datetime(endTime) if endTime is not None else None
+		startTime = parse_datetime(startTime) if startTime is not None else None
 
 		intids = component.getUtility(IIntIds)
 		result = LocatedExternalDict()
@@ -140,16 +140,23 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		catalog = get_recorder_catalog()
 		query = {
 			IX_PRINCIPAL:{'any_of':usernames},
-			IX_CREATEDTIME:{'between':(startTime, endTime)},
+			IX_CREATEDTIME:{'between':(startTime, endTime)}
 		}
+
+		total = 0
 		for uid in catalog.apply(query) or ():
 			context = intids.queryObject(uid)
 			if context is None:
 				continue
+			total += 1
 			username = context.principal
 			items.setdefault(username, [])
 			items[username].append(context)
 
+		# add total
+		result['Total'] = result['ItemCount'] = total
+
+		# sorted by createdTime
 		for values in items.values():
 			values.sort(key=lambda x: x.createdTime)
 		return result
