@@ -34,9 +34,11 @@ from nti.coremetadata.interfaces import IRecordable
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IShardLayout
+from nti.dataserver.interfaces import IDataserverFolder
 
-from nti.recorder.index import IX_PRINCIPAL, get_recordables
+from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
+from nti.recorder.index import get_recordables
 
 from nti.recorder import get_recorder_catalog
 from nti.recorder.record import get_transactions
@@ -67,7 +69,7 @@ class RemoveTransactionHistoryView(AbstractAuthenticatedView):
 @view_config(permission=ACT_NTI_ADMIN)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   context=IDataserver,
+			   context=IDataserverFolder,
 			   name='RemoveAllTransactionHistory')
 class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 
@@ -110,7 +112,7 @@ def parse_datetime(t):
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='GET',
-			   context=IDataserver,
+			   context=IDataserverFolder,
 			   name='UserTransactionHistory')
 class UserTransactionHistoryView(AbstractAuthenticatedView):
 
