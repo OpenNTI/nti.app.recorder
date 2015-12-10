@@ -82,7 +82,7 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 				recordable.locked = False
 				total += remove_transaction_history(recordable)
 				lifecycleevent.modified(recordable)
-		result['Total'] = total
+		result['RecordCount'] = total
 		return result
 
 def _make_min_max_btree_range(search_term):
