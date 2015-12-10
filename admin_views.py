@@ -36,18 +36,22 @@ from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IShardLayout
 from nti.dataserver.interfaces import IDataserverFolder
 
+from nti.dataserver.authorization import ACT_NTI_ADMIN
+
+from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import StandardExternalFields
+
 from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder.index import get_recordables
 
 from nti.recorder import get_recorder_catalog
+from nti.recorder.interfaces import ITransactionRecord
+
 from nti.recorder.record import get_transactions
 from nti.recorder.record import remove_transaction_history
 
-from nti.dataserver.authorization import ACT_NTI_ADMIN
-
-from nti.externalization.interfaces import LocatedExternalDict
-from nti.externalization.interfaces import StandardExternalFields
+from nti.zope_catalog.catalog import ResultSet
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -145,9 +149,9 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		}
 
 		total = 0
-		for uid in catalog.apply(query) or ():
-			context = intids.queryObject(uid)
-			if context is None:
+		uids = catalog.apply(query)
+		for context in ResultSet(uids or (), intids, True):
+			if not ITransactionRecord.providedBy(context):
 				continue
 			total += 1
 			username = context.principal
