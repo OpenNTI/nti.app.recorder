@@ -78,5 +78,6 @@ class TransactionHistoryView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		result = LocatedExternalDict()
-		result[ITEMS] = get_transactions(self.context, sort=True)
+		items = result[ITEMS] = get_transactions(self.context, sort=True)
+		result['Total'] = result['ItemCount'] = len(items)
 		return result
