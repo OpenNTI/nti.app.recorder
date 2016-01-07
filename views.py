@@ -78,9 +78,6 @@ class TransactionHistoryView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		result = LocatedExternalDict()
-		result.__name__ = self.request.view_name
-		result.__parent__ = self.request.context
 		items = result[ITEMS] = get_transactions(self.context, sort=True)
 		result['Total'] = result['ItemCount'] = len(items)
-		result.lastModified = max(items, key=lambda x:x.lastModified) if items else 0
 		return result
