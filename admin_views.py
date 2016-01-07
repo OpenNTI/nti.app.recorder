@@ -20,7 +20,7 @@ from zope import lifecycleevent
 
 from zope.interface.common.idatetime import IDateTime
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -41,7 +41,8 @@ from nti.dataserver.authorization import ACT_NTI_ADMIN
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.recorder.index import IX_PRINCIPAL
+from nti.recorder.index import IX_LOCKED
+from nti.recorder.index import IX_PRINCIPAL 
 from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder.index import get_recordables
 
@@ -89,6 +90,26 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 		result['RecordCount'] = total
 		return result
 
+@view_config(permission=ACT_NTI_ADMIN)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   context=IDataserverFolder,
+			   name='GetLockedObjects')
+class GetLockedObjectsView(AbstractAuthenticatedView):
+
+	def __call__(self):
+		result = LocatedExternalDict()
+		items = result[ITEMS] = []
+		intids = component.getUtility(IIntIds)
+		catalog = get_recorder_catalog()
+		locked_index = catalog[IX_LOCKED]
+		locked_ids = locked_index.documents_to_values.keys()
+		for context in ResultSet(locked_ids or (), intids, True):
+			if IRecordable.providedBy(context) and context.locked:
+				items.append(context)
+		result['ItemCount'] = result['Total'] = len(items)
+		return result
+
 def _make_min_max_btree_range(search_term):
 	min_inclusive = search_term  # start here
 	max_exclusive = search_term[0:-1] + unichr(ord(search_term[-1]) + 1)
@@ -132,7 +153,7 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 			usernames = usernames.split(",")
 
 		if not usernames:
-			raise hexc.HTTPUnprocessableEntity("Must provide a username")
+			raise hexc.HTTPUnprocessableEntity("Must provide a username.")
 
 		endTime = values.get('endTime') or values.get('endDate')
 		startTime = values.get('startTime') or values.get('startDate')
@@ -151,12 +172,11 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		total = 0
 		uids = catalog.apply(query)
 		for context in ResultSet(uids or (), intids, True):
-			if not ITransactionRecord.providedBy(context):
-				continue
-			total += 1
-			username = context.principal
-			items.setdefault(username, [])
-			items[username].append(context)
+			if ITransactionRecord.providedBy(context):
+				total += 1
+				username = context.principal
+				items.setdefault(username, [])
+				items[username].append(context)
 
 		# add total
 		result['Total'] = result['ItemCount'] = total
