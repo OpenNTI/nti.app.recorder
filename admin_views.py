@@ -24,7 +24,6 @@ from zope.intid.interfaces import IIntIds
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
-from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
@@ -152,9 +151,6 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		elif usernames:
 			usernames = usernames.split(",")
 
-		if not usernames:
-			raise hexc.HTTPUnprocessableEntity("Must provide a username.")
-
 		endTime = values.get('endTime') or values.get('endDate')
 		startTime = values.get('startTime') or values.get('startDate')
 		endTime = parse_datetime(endTime) if endTime is not None else None
@@ -165,13 +161,14 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		items = result[ITEMS] = {}
 		catalog = get_recorder_catalog()
 		query = {
-			IX_PRINCIPAL:{'any_of':usernames},
 			IX_CREATEDTIME:{'between':(startTime, endTime)}
 		}
+		if usernames:
+			query[IX_PRINCIPAL] = {'any_of':usernames}
 
 		total = 0
-		uids = catalog.apply(query)
-		for context in ResultSet(uids or (), intids, True):
+		doc_ids = catalog.apply(query)
+		for context in ResultSet(doc_ids or (), intids, True):
 			if ITransactionRecord.providedBy(context):
 				total += 1
 				username = context.principal
