@@ -102,6 +102,7 @@ class GetLockedObjectsView(AbstractAuthenticatedView):
 	def __call__(self):
 		result = LocatedExternalDict()
 		items = result[ITEMS] = []
+		self.request.acl_decoration = False
 		intids = component.getUtility(IIntIds)
 		catalog = get_recorder_catalog()
 		locked_index = catalog[IX_LOCKED]
