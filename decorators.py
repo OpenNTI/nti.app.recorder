@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.intid.interfaces import IIntIds
+
 from zope.location.interfaces import ILocation
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
@@ -32,7 +34,12 @@ from nti.links.links import Link
 from nti.recorder.utils import decompress
 from nti.recorder.interfaces import ITransactionRecord
 
+from nti.traversal.traversal import find_interface
+
+CLASS = StandardExternalFields.CLASS
 LINKS = StandardExternalFields.LINKS
+NTIID = StandardExternalFields.NTIID
+MIMETYPE = StandardExternalFields.MIMETYPE
 
 @component.adapter(ITransactionRecord)
 @interface.implementer(IExternalMappingDecorator)
@@ -45,6 +52,20 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
 				result['ExternalValue'] = decompress(ext_value)
 			except Exception:
 				pass
+		intids = component.queryUtility(IIntIds)
+		recordable = find_interface(context, IRecordable, strict=False)
+		if intids is not None and recordable:  # gather some minor info
+			ntiid = getattr(recordable, 'ntiid', None) or getattr(recordable, NTIID, None)
+			clazz = getattr(recordable, '__external_class_name__', None) or \
+					recordable.__class__.__name__
+			mimeType = 	getattr(recordable, 'mimeType', None) or \
+						getattr(recordable, 'mime_type', None)
+			result['Recordable'] = {
+				CLASS: clazz,
+				NTIID: ntiid,
+				MIMETYPE: mimeType,
+				'IntId': intids.queryId(recordable)
+			}
 
 @component.adapter(IRecordable)
 @interface.implementer(IExternalMappingDecorator)
