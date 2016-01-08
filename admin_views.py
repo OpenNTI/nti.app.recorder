@@ -39,6 +39,7 @@ from nti.dataserver.authorization import ACT_NTI_ADMIN
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
+from nti.externalization.externalization import to_external_object
 
 from nti.recorder.index import IX_LOCKED
 from nti.recorder.index import IX_PRINCIPAL 
@@ -111,7 +112,7 @@ class GetLockedObjectsView(AbstractAuthenticatedView):
 		doc_ids = catalog.apply(query)
 		for context in ResultSet(doc_ids or (), intids, True):
 			if IRecordable.providedBy(context) and context.locked:
-				items.append(context)
+				items.append(to_external_object(context, decorate=False))
 		result['ItemCount'] = result['Total'] = len(items)
 		return result
 
