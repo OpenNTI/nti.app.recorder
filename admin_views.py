@@ -78,15 +78,18 @@ class RemoveTransactionHistoryView(AbstractAuthenticatedView):
 class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 
 	def __call__(self):
-		total = 0
+		count = 0
+		records = 0
 		result = LocatedExternalDict()
 		recordables = get_recordables()
-		for recordable in recordables or ():
+		for recordable in recordables:
 			if recordable.locked:
+				count += 1
 				recordable.locked = False
-				total += remove_transaction_history(recordable)
+				records += remove_transaction_history(recordable)
 				lifecycleevent.modified(recordable)
-		result['RecordCount'] = total
+		result['Recordables'] = count
+		result['RecordsRemoved'] = records
 		return result
 
 @view_config(permission=ACT_NTI_ADMIN)
