@@ -54,7 +54,7 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
 				pass
 		intids = component.queryUtility(IIntIds)
 		recordable = find_interface(context, IRecordable, strict=False)
-		if intids is not None and recordable:  # gather some minor info
+		if intids is not None and recordable is not None:  # gather some minor info
 			ntiid = getattr(recordable, 'ntiid', None) or getattr(recordable, NTIID, None)
 			clazz = getattr(recordable, '__external_class_name__', None) or \
 					recordable.__class__.__name__
