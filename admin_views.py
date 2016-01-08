@@ -102,8 +102,8 @@ class GetLockedObjectsView(AbstractAuthenticatedView):
 		intids = component.getUtility(IIntIds)
 		catalog = get_recorder_catalog()
 		locked_index = catalog[IX_LOCKED]
-		locked_ids = locked_index.documents_to_values.keys()
-		for context in ResultSet(locked_ids or (), intids, True):
+		locked_ids = list(locked_index.documents_to_values.keys())
+		for context in ResultSet(locked_ids, intids, True):
 			if IRecordable.providedBy(context) and context.locked:
 				items.append(context)
 		result['ItemCount'] = result['Total'] = len(items)
