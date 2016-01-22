@@ -86,7 +86,7 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 		result = LocatedExternalDict()
 		recordables = get_recordables()
 		for recordable in recordables:
-			if recordable.locked:
+			if recordable.locked or getattr(recordable, 'child_order_locked', False):
 				count += 1
 				recordable.locked = False
 				if IRecordableContainer.providedBy(recordable):
