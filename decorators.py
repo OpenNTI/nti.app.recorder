@@ -36,6 +36,7 @@ from nti.recorder.interfaces import ITransactionRecord
 
 from nti.traversal.traversal import find_interface
 
+INTID = u'IntId'
 CLASS = StandardExternalFields.CLASS
 LINKS = StandardExternalFields.LINKS
 NTIID = StandardExternalFields.NTIID
@@ -64,7 +65,7 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
 				CLASS: clazz,
 				NTIID: ntiid,
 				MIMETYPE: mimeType,
-				'IntId': intids.queryId(recordable)
+				INTID: intids.queryId(recordable)
 			}
 
 @component.adapter(IRecordable)
