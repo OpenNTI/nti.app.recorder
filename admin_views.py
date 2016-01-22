@@ -30,6 +30,7 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.coremetadata.interfaces import IRecordable
+from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IShardLayout
@@ -41,7 +42,7 @@ from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.recorder.index import IX_LOCKED
-from nti.recorder.index import IX_PRINCIPAL 
+from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder.index import get_recordables
 
@@ -65,6 +66,8 @@ class RemoveTransactionHistoryView(AbstractAuthenticatedView):
 	def __call__(self):
 		result = LocatedExternalDict()
 		self.context.locked = False
+		if IRecordableContainer.providedBy(self.context):
+			self.context.child_order_locked = False
 		result[ITEMS] = get_transactions(self.context, sort=True)
 		remove_transaction_history(self.context)
 		lifecycleevent.modified(self.context)
@@ -86,6 +89,8 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 			if recordable.locked:
 				count += 1
 				recordable.locked = False
+				if IRecordableContainer.providedBy(self.context):
+					self.context.child_order_locked = False
 				records += remove_transaction_history(recordable)
 				lifecycleevent.modified(recordable)
 		result['Recordables'] = count
