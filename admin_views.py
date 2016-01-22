@@ -89,8 +89,8 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 			if recordable.locked:
 				count += 1
 				recordable.locked = False
-				if IRecordableContainer.providedBy(self.context):
-					self.context.child_order_locked = False
+				if IRecordableContainer.providedBy(recordable):
+					recordable.child_order_locked = False
 				records += remove_transaction_history(recordable)
 				lifecycleevent.modified(recordable)
 		result['Recordables'] = count
