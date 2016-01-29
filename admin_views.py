@@ -11,13 +11,13 @@ logger = __import__('logging').getLogger(__name__)
 
 import six
 import time
-import isodate
 from datetime import date
 from datetime import datetime
 
 from zope import component
 from zope import lifecycleevent
 
+from zope.interface.common.idatetime import IDate
 from zope.interface.common.idatetime import IDateTime
 
 from zope.intid.interfaces import IIntIds
@@ -32,21 +32,22 @@ from nti.common.maps import CaseInsensitiveDict
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IRecordableContainer
 
+from nti.dataserver.authorization import ACT_NTI_ADMIN
+
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IShardLayout
 from nti.dataserver.interfaces import IDataserverFolder
 
-from nti.dataserver.authorization import ACT_NTI_ADMIN
-
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
+
+from nti.recorder import get_recorder_catalog
 
 from nti.recorder.index import IX_LOCKED
 from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder.index import get_recordables
 
-from nti.recorder import get_recorder_catalog
 from nti.recorder.interfaces import ITransactionRecord
 
 from nti.recorder.record import get_transactions
@@ -137,7 +138,7 @@ def parse_datetime(t):
 		try:
 			t = IDateTime(t)
 		except Exception:
-			t = isodate.parse_datetime(t)
+			t = IDate(t)
 	if isinstance(t, (date, datetime)):
 		t = time.mktime(t.timetuple())
 	if not isinstance(t, float):
