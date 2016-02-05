@@ -62,11 +62,14 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
 					recordable.__class__.__name__
 			mimeType = 	getattr(recordable, 'mimeType', None) or \
 						getattr(recordable, 'mime_type', None)
+			title = getattr(recordable, 'title', None) or \
+					getattr(recordable, 'label', None)
 			result['Recordable'] = {
 				CLASS: clazz,
 				NTIID: ntiid,
 				MIMETYPE: mimeType,
-				INTID: intids.queryId(recordable)
+				INTID: intids.queryId(recordable),
+				'Title': title
 			}
 
 @component.adapter(IRecordable)
