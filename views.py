@@ -34,11 +34,11 @@ ITEMS = StandardExternalFields.ITEMS
 			   renderer='rest',
 			   request_method='POST',
 			   context=IRecordable,
-			   name='SyncUnlock')
-class SyncUnlockObjectView(AbstractAuthenticatedView):
+			   name='SyncLock')
+class SyncLockObjectView(AbstractAuthenticatedView):
 
 	def __call__(self):
-		self.context.locked = False
+		self.context.lock()
 		lifecycleevent.modified(self.context)
 		return hexc.HTTPNoContent()
 
@@ -47,11 +47,11 @@ class SyncUnlockObjectView(AbstractAuthenticatedView):
 			   renderer='rest',
 			   request_method='POST',
 			   context=IRecordable,
-			   name='SyncLock')
-class SyncLockObjectView(AbstractAuthenticatedView):
+			   name='SyncUnlock')
+class SyncUnlockObjectView(AbstractAuthenticatedView):
 
 	def __call__(self):
-		self.context.locked = True
+		self.context.unlock()
 		lifecycleevent.modified(self.context)
 		return hexc.HTTPNoContent()
 
@@ -65,7 +65,7 @@ class SyncLockObjectStatusView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		result = LocatedExternalDict()
-		result['Locked'] = self.context.locked
+		result['Locked'] = self.context.isLocked()
 		return result
 
 @view_config(name='audit_log')
