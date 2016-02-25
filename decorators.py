@@ -88,7 +88,9 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		"""
 		return (	self._acl_decoration
  				and bool(self.authenticated_userid)
- 				and getattr(context, '_p_jar', None) is not None
+ 				# Some objects have intids, but do not have connections (?).
+ 				and ( 	getattr(context, '_p_jar', None)
+					or 	getattr(context, '_ds_intid', None ))
 				and has_permission(ACT_UPDATE, context, self.request))
 
 	def _do_decorate_external(self, context, result):
