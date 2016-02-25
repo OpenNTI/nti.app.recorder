@@ -82,6 +82,10 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		result = getattr(request, 'acl_decoration', True)
 		return result
 
+	@Lazy
+	def intids(self):
+		return component.getUtility(IIntIds)
+
 	def _predicate(self, context, result):
 		"""
 		Only persistent objects for users that have permission.
@@ -90,7 +94,7 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
  				and bool(self.authenticated_userid)
  				# Some objects have intids, but do not have connections (?).
  				and ( 	getattr(context, '_p_jar', None)
-					or 	getattr(context, '_ds_intid', None ))
+					 or getattr(context, self.intids.attribute, None))
 				and has_permission(ACT_UPDATE, context, self.request))
 
 	def _do_decorate_external(self, context, result):
