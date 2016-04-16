@@ -66,9 +66,9 @@ class RemoveTransactionHistoryView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		result = LocatedExternalDict()
-		self.context.locked = False
 		if IRecordableContainer.providedBy(self.context):
 			self.context.child_order_locked = False
+		self.context.unlock()
 		result[ITEMS] = get_transactions(self.context, sort=True)
 		remove_transaction_history(self.context)
 		lifecycleevent.modified(self.context)
@@ -87,9 +87,10 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 		result = LocatedExternalDict()
 		recordables = get_recordables()
 		for recordable in recordables:
-			if recordable.locked or getattr(recordable, 'child_order_locked', False):
+			if 		recordable.isLocked() \
+				or	getattr(recordable, 'child_order_locked', False):
 				count += 1
-				recordable.locked = False
+				recordable.unlock()
 				if IRecordableContainer.providedBy(recordable):
 					recordable.child_order_locked = False
 				records += remove_transaction_history(recordable)
@@ -116,7 +117,7 @@ class GetLockedObjectsView(AbstractAuthenticatedView):
 		}
 		doc_ids = catalog.apply(query)
 		for context in ResultSet(doc_ids or (), intids, True):
-			if IRecordable.providedBy(context) and context.locked:
+			if IRecordable.providedBy(context) and context.isLocked():
 				items.append(context)
 		result['ItemCount'] = result['Total'] = len(items)
 		return result
