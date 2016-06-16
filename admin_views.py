@@ -59,8 +59,8 @@ ITEMS = StandardExternalFields.ITEMS
 
 def _is_locked(context):
 	result = 	(IRecordable.providedBy(context) and context.isLocked()) \
-			or	(IRecordableContainer.providedBy(context)
-				 and context.is_child_order_locked())
+			or	(	 IRecordableContainer.providedBy(context)
+				 and context.isChildOrderLocked())
 	return result
 
 @view_config(permission=ACT_NTI_ADMIN)
