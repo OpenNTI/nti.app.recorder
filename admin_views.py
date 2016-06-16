@@ -46,7 +46,7 @@ from nti.recorder import get_recorder_catalog
 from nti.recorder.index import IX_LOCKED
 from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
-from nti.recorder.index import get_recordables
+from nti.recorder.index import IX_CHILD_ORDER_LOCKED
 
 from nti.recorder.interfaces import ITransactionRecord
 
@@ -56,6 +56,12 @@ from nti.recorder.record import remove_transaction_history
 from nti.zope_catalog.catalog import ResultSet
 
 ITEMS = StandardExternalFields.ITEMS
+
+def _is_locked(context):
+	result = 	(IRecordable.providedBy(context) and context.isLocked()) \
+			or	(IRecordableContainer.providedBy(context)
+				 and context.is_child_order_locked())
+	return result
 
 @view_config(permission=ACT_NTI_ADMIN)
 @view_defaults(route_name='objects.generic.traversal',
@@ -67,7 +73,7 @@ class RemoveTransactionHistoryView(AbstractAuthenticatedView):
 	def __call__(self):
 		result = LocatedExternalDict()
 		if IRecordableContainer.providedBy(self.context):
-			self.context.child_order_locked = False
+			self.context.child_order_unlock()
 		self.context.unlock()
 		result[ITEMS] = get_transactions(self.context, sort=True)
 		remove_transaction_history(self.context)
@@ -85,14 +91,23 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 		count = 0
 		records = 0
 		result = LocatedExternalDict()
-		recordables = get_recordables()
-		for recordable in recordables:
-			if 		recordable.isLocked() \
-				or	getattr(recordable, 'child_order_locked', False):
+		catalog = get_recorder_catalog()
+		intids = component.getUtility(IIntIds)
+		query = {
+			IX_LOCKED:{'any_of':(True,)}
+		}
+		locked_ids = catalog.apply(query) or catalog.family.IF.LFSet()
+		query = {
+			IX_CHILD_ORDER_LOCKED:{'any_of':(True,)}
+		}
+		child_locked_ids = catalog.apply(query) or catalog.family.IF.LFSet()
+		doc_ids = catalog.family.IF.multiunion([locked_ids, child_locked_ids])
+		for recordable in ResultSet(doc_ids or (), intids, True):
+			if 	_is_locked(recordable):
 				count += 1
 				recordable.unlock()
 				if IRecordableContainer.providedBy(recordable):
-					recordable.child_order_locked = False
+					recordable.child_order_unlock()
 				records += remove_transaction_history(recordable)
 				lifecycleevent.modified(recordable)
 		result['Recordables'] = count
@@ -115,9 +130,14 @@ class GetLockedObjectsView(AbstractAuthenticatedView):
 		query = {
 			IX_LOCKED:{'any_of':(True,)}
 		}
-		doc_ids = catalog.apply(query)
+		locked_ids = catalog.apply(query) or catalog.family.IF.LFSet()
+		query = {
+			IX_CHILD_ORDER_LOCKED:{'any_of':(True,)}
+		}
+		child_locked_ids = catalog.apply(query) or catalog.family.IF.LFSet()
+		doc_ids = catalog.family.IF.multiunion([locked_ids, child_locked_ids])
 		for context in ResultSet(doc_ids or (), intids, True):
-			if IRecordable.providedBy(context) and context.isLocked():
+			if _is_locked(context):
 				items.append(context)
 		result['ItemCount'] = result['Total'] = len(items)
 		return result
@@ -139,7 +159,10 @@ def parse_datetime(t):
 		try:
 			t = IDateTime(t)
 		except Exception:
-			t = IDate(t)
+			try:
+				t = IDate(t)
+			except Exception:
+				t = float(t)
 	if isinstance(t, (date, datetime)):
 		t = time.mktime(t.timetuple())
 	if not isinstance(t, float):
