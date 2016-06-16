@@ -19,6 +19,7 @@ from pyramid.view import view_defaults
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.coremetadata.interfaces import IRecordable
+from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.dataserver.authorization import ACT_UPDATE
 
@@ -66,6 +67,8 @@ class SyncLockObjectStatusView(AbstractAuthenticatedView):
 	def __call__(self):
 		result = LocatedExternalDict()
 		result['Locked'] = self.context.isLocked()
+		if IRecordableContainer.providedBy(self.context):
+			result['ChildOrderLocked'] = self.context.isChildOrderLocked()
 		return result
 
 @view_config(name='audit_log')
