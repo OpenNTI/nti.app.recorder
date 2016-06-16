@@ -56,6 +56,32 @@ class SyncUnlockObjectView(AbstractAuthenticatedView):
 		lifecycleevent.modified(self.context)
 		return hexc.HTTPNoContent()
 
+@view_config(permission=ACT_UPDATE)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='POST',
+			   context=IRecordableContainer,
+			   name='ChildOrderLock')
+class ChildOrderLockObjectView(AbstractAuthenticatedView):
+
+	def __call__(self):
+		self.context.childOrderLock()
+		lifecycleevent.modified(self.context)
+		return hexc.HTTPNoContent()
+
+@view_config(permission=ACT_UPDATE)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='POST',
+			   context=IRecordableContainer,
+			   name='ChildOrderUnlock')
+class ChildOrderUnlockObjectView(AbstractAuthenticatedView):
+
+	def __call__(self):
+		self.context.childOrderUnlock()
+		lifecycleevent.modified(self.context)
+		return hexc.HTTPNoContent()
+
 @view_config(route_name='objects.generic.traversal',
 			 renderer='rest',
 			 request_method='GET',
