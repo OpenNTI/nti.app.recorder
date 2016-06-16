@@ -27,6 +27,8 @@ from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
+from nti.app.externalization.view_mixins import BatchingUtilsMixin
+
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.coremetadata.interfaces import IRecordable
@@ -120,7 +122,10 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 			   renderer='rest',
 			   context=IDataserverFolder,
 			   name='GetLockedObjects')
-class GetLockedObjectsView(AbstractAuthenticatedView):
+class GetLockedObjectsView(AbstractAuthenticatedView, BatchingUtilsMixin):
+
+	_DEFAULT_BATCH_START = 0
+	_DEFAULT_BATCH_SIZE = 100
 
 	def readInput(self, value=None):
 		result = CaseInsensitiveDict(self.request.params)
@@ -136,7 +141,6 @@ class GetLockedObjectsView(AbstractAuthenticatedView):
 			accept = ()
 			
 		result = LocatedExternalDict()
-		items = result[ITEMS] = []
 		catalog = get_recorder_catalog()
 		self.request.acl_decoration = False
 		intids = component.getUtility(IIntIds)
@@ -162,10 +166,9 @@ class GetLockedObjectsView(AbstractAuthenticatedView):
 			mt_ids = catalog.apply(query) or catalog.family.IF.LFSet()
 			doc_ids = catalog.family.IF.intersection(doc_ids, mt_ids)
 
-		for context in ResultSet(doc_ids or (), intids, True):
-			if _is_locked(context):
-				items.append(context)
-		result['ItemCount'] = result['Total'] = len(items)
+		items = [x for x in ResultSet(doc_ids, intids, True) if _is_locked(x)]	
+		result['Total'] = len(items)
+		self._batch_items_iterable(result, items)
 		return result
 
 def _make_min_max_btree_range(search_term):
