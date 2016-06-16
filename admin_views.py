@@ -31,6 +31,8 @@ from nti.app.externalization.view_mixins import BatchingUtilsMixin
 
 from nti.common.maps import CaseInsensitiveDict
 
+from nti.common.string import is_true
+
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IRecordableContainer
 
@@ -140,9 +142,11 @@ class GetLockedObjectsView(AbstractAuthenticatedView, BatchingUtilsMixin):
 		else:
 			accept = ()
 			
+		links = is_true(values.get('links'))
+		self.request.acl_decoration = links
+
 		result = LocatedExternalDict()
 		catalog = get_recorder_catalog()
-		self.request.acl_decoration = False
 		intids = component.getUtility(IIntIds)
 
 		# query locked
