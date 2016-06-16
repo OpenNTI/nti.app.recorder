@@ -44,6 +44,7 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.recorder import get_recorder_catalog
 
 from nti.recorder.index import IX_LOCKED
+from nti.recorder.index import IX_MIMETYPE
 from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder.index import IX_CHILD_ORDER_LOCKED
@@ -121,21 +122,46 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 			   name='GetLockedObjects')
 class GetLockedObjectsView(AbstractAuthenticatedView):
 
+	def readInput(self, value=None):
+		result = CaseInsensitiveDict(self.request.params)
+		return result
+
 	def __call__(self):
+		values = self.readInput()
+		accept = values.get('accept') or values.get('mimeTypes') or u''
+		accept = set(accept.split(',')) if accept else ()
+		if accept and '*/*' not in accept:
+			accept = set(accept)
+		else:
+			accept = ()
+			
 		result = LocatedExternalDict()
 		items = result[ITEMS] = []
+		catalog = get_recorder_catalog()
 		self.request.acl_decoration = False
 		intids = component.getUtility(IIntIds)
-		catalog = get_recorder_catalog()
+
+		# query locked
 		query = {
 			IX_LOCKED:{'any_of':(True,)}
 		}
 		locked_ids = catalog.apply(query) or catalog.family.IF.LFSet()
+
+		# query child order locked
 		query = {
 			IX_CHILD_ORDER_LOCKED:{'any_of':(True,)}
 		}
 		child_locked_ids = catalog.apply(query) or catalog.family.IF.LFSet()
 		doc_ids = catalog.family.IF.multiunion([locked_ids, child_locked_ids])
+
+		# query mimeTypes
+		if accept:
+			query = {
+				IX_MIMETYPE:{'any_of':accept}
+			}
+			mt_ids = catalog.apply(query) or catalog.family.IF.LFSet()
+			doc_ids = catalog.family.IF.intersection(doc_ids, mt_ids)
+
 		for context in ResultSet(doc_ids or (), intids, True):
 			if _is_locked(context):
 				items.append(context)
