@@ -136,9 +136,10 @@ class GetLockedObjectsView(AbstractAuthenticatedView, BatchingUtilsMixin):
 	def __call__(self):
 		values = self.readInput()
 		accept = values.get('accept') or values.get('mimeTypes') or u''
-		accept = set(accept.split(',')) if accept else ()
+		accept = accept.split(',') if accept else ()
 		if accept and '*/*' not in accept:
-			accept = set(accept)
+			accept = {e.strip().lower() for e in accept if e}
+			accept.discard(u'')
 		else:
 			accept = ()
 			
