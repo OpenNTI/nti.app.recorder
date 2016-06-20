@@ -61,6 +61,8 @@ from nti.recorder.record import remove_transaction_history
 from nti.zope_catalog.catalog import ResultSet
 
 ITEMS = StandardExternalFields.ITEMS
+TOTAL = StandardExternalFields.TOTAL
+ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 def _is_locked(context):
 	result = 	(IRecordable.providedBy(context) and context.isLocked()) \
@@ -172,7 +174,7 @@ class GetLockedObjectsView(AbstractAuthenticatedView, BatchingUtilsMixin):
 			doc_ids = catalog.family.IF.intersection(doc_ids, mt_ids)
 
 		items = [x for x in ResultSet(doc_ids, intids, True) if _is_locked(x)]	
-		result['Total'] = len(items)
+		result[TOTAL] = len(items)
 		self._batch_items_iterable(result, items)
 		return result
 
@@ -246,7 +248,7 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 				items[username].append(context)
 
 		# add total
-		result['Total'] = result['ItemCount'] = total
+		result[TOTAL] = result[ITEM_COUNT] = total
 
 		# sorted by createdTime
 		for values in items.values():
