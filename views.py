@@ -29,6 +29,8 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.recorder import get_transactions
 
 ITEMS = StandardExternalFields.ITEMS
+TOTAL = StandardExternalFields.TOTAL
+ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 @view_config(permission=ACT_UPDATE)
 @view_defaults(route_name='objects.generic.traversal',
@@ -109,5 +111,5 @@ class TransactionHistoryView(AbstractAuthenticatedView):
 	def __call__(self):
 		result = LocatedExternalDict()
 		items = result[ITEMS] = get_transactions(self.context, sort=True)
-		result['Total'] = result['ItemCount'] = len(items)
+		result[TOTAL] = result[ITEM_COUNT] = len(items)
 		return result
