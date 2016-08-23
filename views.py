@@ -22,6 +22,7 @@ from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.dataserver.authorization import ACT_UPDATE
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
@@ -33,6 +34,7 @@ TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 @view_config(permission=ACT_UPDATE)
+@view_config(permission=ACT_CONTENT_EDIT)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='POST',
@@ -46,6 +48,7 @@ class SyncLockObjectView(AbstractAuthenticatedView):
 		return hexc.HTTPNoContent()
 
 @view_config(permission=ACT_UPDATE)
+@view_config(permission=ACT_CONTENT_EDIT)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='POST',
@@ -59,6 +62,7 @@ class SyncUnlockObjectView(AbstractAuthenticatedView):
 		return hexc.HTTPNoContent()
 
 @view_config(permission=ACT_UPDATE)
+@view_config(permission=ACT_CONTENT_EDIT)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='POST',
@@ -72,6 +76,7 @@ class ChildOrderLockObjectView(AbstractAuthenticatedView):
 		return hexc.HTTPNoContent()
 
 @view_config(permission=ACT_UPDATE)
+@view_config(permission=ACT_CONTENT_EDIT)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='POST',
@@ -84,12 +89,13 @@ class ChildOrderUnlockObjectView(AbstractAuthenticatedView):
 		lifecycleevent.modified(self.context)
 		return hexc.HTTPNoContent()
 
-@view_config(route_name='objects.generic.traversal',
-			 renderer='rest',
-			 request_method='GET',
-			 context=IRecordable,
-			 permission=ACT_UPDATE,
-			 name='SyncLockStatus')
+@view_config(permission=ACT_UPDATE)
+@view_config(permission=ACT_CONTENT_EDIT)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET',
+			   context=IRecordable,
+			   name='SyncLockStatus')
 class SyncLockObjectStatusView(AbstractAuthenticatedView):
 
 	def __call__(self):
@@ -99,13 +105,13 @@ class SyncLockObjectStatusView(AbstractAuthenticatedView):
 			result['ChildOrderLocked'] = self.context.isChildOrderLocked()
 		return result
 
-@view_config(name='audit_log')
-@view_config(name='TransactionHistory')
+@view_config(permission=ACT_UPDATE)
+@view_config(permission=ACT_CONTENT_EDIT)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='GET',
-			   permission=ACT_UPDATE,
-			   context=IRecordable)
+			   context=IRecordable,
+			   name='TransactionHistory')
 class TransactionHistoryView(AbstractAuthenticatedView):
 
 	def __call__(self):
@@ -113,3 +119,13 @@ class TransactionHistoryView(AbstractAuthenticatedView):
 		items = result[ITEMS] = get_transactions(self.context, sort=True)
 		result[TOTAL] = result[ITEM_COUNT] = len(items)
 		return result
+
+@view_config(permission=ACT_UPDATE)
+@view_config(permission=ACT_CONTENT_EDIT)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET',
+			   context=IRecordable,
+			   name='audit_log')
+class AuditLogView(TransactionHistoryView):
+	pass
