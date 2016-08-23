@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.appserver.pyramid_authorization import has_permission
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -18,6 +17,8 @@ from pyramid.view import view_config
 from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
+
+from nti.appserver.pyramid_authorization import has_permission
 
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IRecordableContainer
