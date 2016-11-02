@@ -217,7 +217,10 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 		request = self.request
 		values = CaseInsensitiveDict(**request.params)
 		term = values.get('term') or values.get('search')
-		usernames = values.get('usernames') or values.get('username')
+		usernames = 	values.get('usernames') \
+					or	values.get('username') \
+					or	values.get('users') \
+					or	values.get('user')
 		if term:
 			usernames = username_search(term)
 		elif usernames:
