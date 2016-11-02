@@ -86,9 +86,7 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     @Lazy
     def _acl_decoration(self):
-        request = self.request
-        result = getattr(request, 'acl_decoration', True)
-        return result
+        return getattr(self.request, 'acl_decoration', True)
 
     @Lazy
     def intids(self):
