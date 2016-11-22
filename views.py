@@ -48,7 +48,7 @@ class AbstractRecordableObjectView(AbstractAuthenticatedView):
 	def __call__(self):
 		self._chek_perms()
 		return self._do_call()
-	
+
 @view_config(route_name='objects.generic.traversal',
 			 renderer='rest',
 			 request_method='POST',
