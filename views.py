@@ -95,7 +95,7 @@ class ChildOrderUnlockObjectView(AbstractRecordableObjectView):
 	def _do_call(self):
 		self.context.childOrderUnlock()
 		lifecycleevent.modified(self.context)
-		return self.contextl
+		return self.context
 
 @view_config(route_name='objects.generic.traversal',
 			 renderer='rest',
