@@ -25,7 +25,7 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.coremetadata.interfaces import IRecordable
-from nti.coremetadata.interfaces import IRecordableContainer 
+from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.dataserver.authorization import ACT_UPDATE
 
@@ -48,6 +48,7 @@ LINKS = StandardExternalFields.LINKS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 
+
 @component.adapter(ITransactionRecord)
 @interface.implementer(IExternalMappingDecorator)
 class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
@@ -61,17 +62,18 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
                 pass
         intids = component.queryUtility(IIntIds)
         recordable = find_interface(context, IRecordable, strict=False)
-        if intids is not None and recordable is not None:  # gather some minor info
-            ntiid = 	getattr(recordable, NTIID.lower(), None) \
-            		or	getattr(recordable, NTIID, None)
-            clazz = 	getattr(recordable, '__external_class_name__', None) \
-            		or 	recordable.__class__.__name__
+        # gather some minor info
+        if intids is not None and recordable is not None:
+            ntiid =  getattr(recordable, NTIID.lower(), None) \
+                  or getattr(recordable, NTIID, None)
+            clazz =  getattr(recordable, '__external_class_name__', None) \
+                  or recordable.__class__.__name__
 
             aware = IContentTypeAware(recordable, recordable)
-            mimeType = 		getattr(aware, 'mimeType', None) \
-            			or	getattr(aware, 'mime_type', None)
-            title = 	getattr(recordable, 'title', None) \
-            		or	getattr(recordable, 'label', None)
+            mimeType = getattr(aware, 'mimeType', None) \
+                    or getattr(aware, 'mime_type', None)
+            title = getattr(recordable, 'title', None) \
+                 or getattr(recordable, 'label', None)
             result['Recordable'] = {
                 CLASS: clazz,
                 NTIID: ntiid,
@@ -79,6 +81,7 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
                 INTID: intids.queryId(recordable),
                 'Title': title
             }
+
 
 @component.adapter(IRecordable)
 @interface.implementer(IExternalMappingDecorator)
@@ -96,11 +99,11 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
         """
         Only persistent objects for users that have permission.
         """
-        return (	 self._acl_decoration
+        return (      self._acl_decoration
                 and bool(self.authenticated_userid)
                 # Some objects have intids, but do not have connections (?).
-                and (	IConnection(context, None) is not None
-					 or	getattr(context, self.intids.attribute, None))
+                and (   IConnection(context, None) is not None
+                     or getattr(context, self.intids.attribute, None))
                 and has_permission(ACT_UPDATE, context, self.request))
 
     def _do_decorate_external(self, context, result):
@@ -109,20 +112,30 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
         # lock/unlock
         if not context.isLocked():
-            link = Link(context, rel='SyncLock', elements=('@@SyncLock',))
+            link = Link(context,
+                        rel='SyncLock',
+                        elements=('@@SyncLock',))
         else:
-            link = Link(context, rel='SyncUnlock', elements=('@@SyncUnlock',))
+            link = Link(context,
+                        rel='SyncUnlock',
+                        elements=('@@SyncUnlock',))
         added.append(link)
 
         if IRecordableContainer.providedBy(context):
             if not context.isChildOrderLocked():
-                link = Link(context, rel='ChildOrderLock', elements=('@@ChildOrderLock',))
+                link = Link(context,
+                            rel='ChildOrderLock',
+                            elements=('@@ChildOrderLock',))
             else:
-                link = Link(context, rel='ChildOrderUnlock', elements=('@@ChildOrderUnlock',))
+                link = Link(context,
+                            rel='ChildOrderUnlock',
+                            elements=('@@ChildOrderUnlock',))
             added.append(link)
 
         # audit log
-        link = Link(context, rel='audit_log', elements=('@@audit_log',))
+        link = Link(context,
+                    rel='audit_log',
+                    elements=('@@audit_log',))
         added.append(link)
 
         # add links

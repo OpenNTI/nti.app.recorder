@@ -35,92 +35,99 @@ ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
+
 class AbstractRecordableObjectView(AbstractAuthenticatedView):
 
-	def _chek_perms(self):
-		if not (	has_permission(ACT_UPDATE, self.context, self.request) \
-				or	has_permission(ACT_CONTENT_EDIT, self.context, self.request) ):
-			raise hexc.HTTPForbidden()
+    def _chek_perms(self):
+        if not (   has_permission(ACT_UPDATE, self.context, self.request)
+                or has_permission(ACT_CONTENT_EDIT, self.context, self.request)):
+            raise hexc.HTTPForbidden()
 
-	def _do_call(self):
-		pass
+    def _do_call(self):
+        pass
 
-	def __call__(self):
-		self._chek_perms()
-		return self._do_call()
+    def __call__(self):
+        self._chek_perms()
+        return self._do_call()
+
 
 @view_config(route_name='objects.generic.traversal',
-			 renderer='rest',
-			 request_method='POST',
-			 context=IRecordable,
-			 name='SyncLock')
+             renderer='rest',
+             request_method='POST',
+             context=IRecordable,
+             name='SyncLock')
 class SyncLockObjectView(AbstractRecordableObjectView):
 
-	def _do_call(self):
-		self.context.lock()
-		lifecycleevent.modified(self.context)
-		return self.context
+    def _do_call(self):
+        self.context.lock()
+        lifecycleevent.modified(self.context)
+        return self.context
+
 
 @view_config(route_name='objects.generic.traversal',
-			 renderer='rest',
-			 request_method='POST',
-			 context=IRecordable,
-			 name='SyncUnlock')
+             renderer='rest',
+             request_method='POST',
+             context=IRecordable,
+             name='SyncUnlock')
 class SyncUnlockObjectView(AbstractRecordableObjectView):
 
-	def _do_call(self):
-		self.context.unlock()
-		lifecycleevent.modified(self.context)
-		return self.context
+    def _do_call(self):
+        self.context.unlock()
+        lifecycleevent.modified(self.context)
+        return self.context
+
 
 @view_config(route_name='objects.generic.traversal',
-			 renderer='rest',
-			 request_method='POST',
-			 context=IRecordableContainer,
-			 name='ChildOrderLock')
+             renderer='rest',
+             request_method='POST',
+             context=IRecordableContainer,
+             name='ChildOrderLock')
 class ChildOrderLockObjectView(AbstractRecordableObjectView):
 
-	def _do_call(self):
-		self.context.childOrderLock()
-		lifecycleevent.modified(self.context)
-		return self.context
+    def _do_call(self):
+        self.context.childOrderLock()
+        lifecycleevent.modified(self.context)
+        return self.context
+
 
 @view_config(route_name='objects.generic.traversal',
-			 renderer='rest',
-			 request_method='POST',
-			 context=IRecordableContainer,
-			 name='ChildOrderUnlock')
+             renderer='rest',
+             request_method='POST',
+             context=IRecordableContainer,
+             name='ChildOrderUnlock')
 class ChildOrderUnlockObjectView(AbstractRecordableObjectView):
 
-	def _do_call(self):
-		self.context.childOrderUnlock()
-		lifecycleevent.modified(self.context)
-		return self.context
+    def _do_call(self):
+        self.context.childOrderUnlock()
+        lifecycleevent.modified(self.context)
+        return self.context
+
 
 @view_config(route_name='objects.generic.traversal',
-			 renderer='rest',
-			 request_method='GET',
-			 context=IRecordable,
-			 name='SyncLockStatus')
+             renderer='rest',
+             request_method='GET',
+             context=IRecordable,
+             name='SyncLockStatus')
 class SyncLockObjectStatusView(AbstractRecordableObjectView):
 
-	def _do_call(self):
-		result = LocatedExternalDict()
-		result['Locked'] = self.context.isLocked()
-		if IRecordableContainer.providedBy(self.context):
-			result['ChildOrderLocked'] = self.context.isChildOrderLocked()
-		return result
+    def _do_call(self):
+        result = LocatedExternalDict()
+        result['Locked'] = self.context.isLocked()
+        if IRecordableContainer.providedBy(self.context):
+            result['ChildOrderLocked'] = self.context.isChildOrderLocked()
+        return result
+
 
 @view_config(name='audit_log')
 @view_config(name='TransactionHistory')
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='GET',
-			   context=IRecordable)
+               renderer='rest',
+               request_method='GET',
+               context=IRecordable)
 class TransactionHistoryView(AbstractRecordableObjectView):
 
-	def _do_call(self):
-		result = LocatedExternalDict()
-		items = result[ITEMS] = get_transactions(self.context, sort=True)
-		result[TOTAL] = result[ITEM_COUNT] = len(items)
-		return result
+    def _do_call(self):
+        result = LocatedExternalDict()
+        items = result[ITEMS] = get_transactions(self.context, sort=True)
+        result[TOTAL] = result[ITEM_COUNT] = len(items)
+        return result
