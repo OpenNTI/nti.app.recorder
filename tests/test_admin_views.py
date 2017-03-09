@@ -8,20 +8,44 @@ __docformat__ = "restructuredtext en"
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
+from hamcrest import none
+from hamcrest import is_in
+from hamcrest import is_not
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 
-from nti.externalization.interfaces import StandardExternalFields
+from zope import component
+from zope import interface
+
+from zope.annotation.interfaces import IAttributeAnnotatable
+
+from zope.intid.interfaces import IIntIds
+
+from nti.coremetadata.interfaces import IRecordable
+
+from nti.coremetadata.mixins import RecordableMixin
+
+from nti.dataserver.users import User
+
+from nti.recorder.index import get_transactions
+
+from nti.recorder.utils import record_transaction
+
+from nti.zodb.persistentproperty import PersistentPropertyHolder
 
 from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
-INTID = StandardExternalFields.INTID
-NTIID = StandardExternalFields.NTIID
+from nti.dataserver.tests import mock_dataserver
 
 
+@interface.implementer(IRecordable, IAttributeAnnotatable)
+class Bleach(PersistentPropertyHolder, RecordableMixin):
+    pass
+        
+        
 class TestAdminViews(ApplicationLayerTest):
 
     @WithSharedApplicationMockDS(users=True, testapp=True)
@@ -44,3 +68,25 @@ class TestAdminViews(ApplicationLayerTest):
         res = self.testapp.get(path, params={'startTime': 0}, status=200)
         assert_that(res.json_body, has_entry('ItemCount', is_(0)))
         assert_that(res.json_body, has_entry('Items', has_length(0)))
+
+    @mock_dataserver.WithMockDSTrans
+    def test_recordable(self):
+
+        user = User.create_user(dataserver=self.ds,
+                                username='bleach@nextthought.com')
+            
+        ichigo = Bleach()
+        current_transaction = mock_dataserver.current_transaction
+        current_transaction.add(ichigo)
+        record = record_transaction(ichigo, 
+                                    principal=user,
+                                    type_="Activation",
+                                    ext_value={'bankai':True})
+        assert_that(record, is_not(none()))
+        
+        intids = component.getUtility(IIntIds)
+        assert_that(intids.queryId(record), is_not(none()))
+
+        transactions = list(get_transactions())
+        assert_that(transactions, has_length(1))
+        assert_that(record, is_in(transactions))
