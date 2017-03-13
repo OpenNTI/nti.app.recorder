@@ -124,10 +124,12 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
         if IRecordableContainer.providedBy(context):
             if not context.isChildOrderLocked():
                 link = Link(context,
+                            method='POST',
                             rel='ChildOrderLock',
                             elements=('@@ChildOrderLock',))
             else:
                 link = Link(context,
+                            method='POST',
                             rel='ChildOrderUnlock',
                             elements=('@@ChildOrderUnlock',))
             added.append(link)
@@ -136,6 +138,12 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
         link = Link(context,
                     rel='audit_log',
                     elements=('@@audit_log',))
+        added.append(link)
+        
+        link = Link(context,
+                    method='POST',
+                    rel='trim_log',
+                    elements=('@@trim_log',))
         added.append(link)
 
         # add links
