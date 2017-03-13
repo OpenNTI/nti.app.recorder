@@ -10,6 +10,10 @@
 
 	<include package="nti.recorder" />
 		
+	<!-- ACLs -->
+	<adapter factory=".acl.TransactionRecordACLProvider" />
+	
+	<!-- Decorators -->
 	<subscriber factory=".decorators._TransactionRecordDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.recorder.interfaces.ITransactionRecord
