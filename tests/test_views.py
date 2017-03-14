@@ -66,14 +66,14 @@ class TestViews(ApplicationLayerTest):
                                ext_value={'bankai': True},
                                createdTime=2000)
             assert_that(get_transactions(ichigo),  has_length(2))
-            oid = to_external_ntiid_oid(ichigo)
+            rec_oid = to_external_ntiid_oid(ichigo)
 
         res = self.testapp.post_json(
-                '/dataserver2/Objects/%s/@@trim_log' % oid,
+                '/dataserver2/Objects/%s/@@trim_log' % rec_oid,
                 {'startTime': 1200},
                 status=200)
         assert_that(res.json_body, has_entry('Items', has_length(1)))
 
         with mock_dataserver.mock_db_trans(self.ds):
             ichigo = self.ds.root['ichigo']
-            assert_that(get_transactions(ichigo),  has_length(1))
+            assert_that(get_transactions(ichigo), has_length(1))

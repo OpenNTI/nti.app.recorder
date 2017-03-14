@@ -9,18 +9,10 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import six
-import time
-from datetime import date
-from datetime import datetime
-
 from requests.structures import CaseInsensitiveDict
 
 from zope import component
 from zope import lifecycleevent
-
-from zope.interface.common.idatetime import IDate
-from zope.interface.common.idatetime import IDateTime
 
 from zope.intid.interfaces import IIntIds
 
@@ -30,6 +22,8 @@ from pyramid.view import view_defaults
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.externalization.view_mixins import BatchingUtilsMixin
+
+from nti.app.recorder.utils import parse_datetime
 
 from nti.common.string import is_true
 
@@ -197,22 +191,6 @@ def username_search(search_term):
                                 max_exclusive,
                                 excludemax=True)
     return list(usernames)
-
-
-def parse_datetime(t):
-    if isinstance(t, six.string_types):
-        try:
-            t = IDateTime(t)
-        except Exception:
-            try:
-                t = IDate(t)
-            except Exception:
-                t = float(t)
-    if isinstance(t, (date, datetime)):
-        t = time.mktime(t.timetuple())
-    if not isinstance(t, float):
-        raise ValueError("Invalid date[time]")
-    return t
 
 
 @view_config(permission=ACT_NTI_ADMIN)

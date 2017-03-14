@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import time
-
 from requests.structures import CaseInsensitiveDict
 
 from zope import lifecycleevent
@@ -41,9 +39,8 @@ from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.recorder.interfaces import ITransactionRecord
 from nti.recorder.interfaces import ITransactionRecordHistory
-
-from nti.recorder.record import get_transactions
 
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
@@ -140,9 +137,20 @@ class SyncLockObjectStatusView(AbstractRecordableObjectView):
                context=IRecordable)
 class TransactionHistoryView(AbstractRecordableObjectView):
 
+    def readInput(self):
+        return CaseInsensitiveDict(self.request.params)
+
     def _do_call(self):
+        data = self.readInput()
+        endTime = data.get('endTime')
+        startTime = data.get('startTime')
+        # parse time input
+        endTime = parse_datetime(endTime) if endTime else None
+        startTime = parse_datetime(startTime) if startTime else None
+        # perform query
         result = LocatedExternalDict()
-        items = result[ITEMS] = get_transactions(self.context, sort=True)
+        history = ITransactionRecordHistory(self.context)
+        items = sorted(history.query(start_time=startTime, end_time=endTime))
         result[TOTAL] = result[ITEM_COUNT] = len(items)
         return result
 
@@ -168,13 +176,13 @@ class TrimTransactionHistoryView(AbstractRecordableObjectView,
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                'message': _("Must specified a time range."),
-                                'code': 'InvalidTimeRange'
+                                 'message': _("Must specified a time range."),
+                                 'code': 'InvalidTimeRange'
                              },
                              None)
         # parse time input
-        endTime = parse_datetime(endTime) if endTime else time.time()
-        startTime = parse_datetime(startTime) if startTime else 0
+        endTime = parse_datetime(endTime) if endTime else None
+        startTime = parse_datetime(startTime) if startTime else None
         # query history
         history = ITransactionRecordHistory(self.context)
         items = history.query(start_time=startTime, end_time=endTime)
@@ -185,4 +193,16 @@ class TrimTransactionHistoryView(AbstractRecordableObjectView,
         result = LocatedExternalDict()
         result[ITEMS] = items
         result[TOTAL] = result[ITEM_COUNT] = len(items)
+        return result
+
+
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='DELETE',
+               context=ITransactionRecord)
+class TransactionRecordDeleteView(AbstractAuthenticatedView):
+
+    def __call__(self):
+        del self.context.__parent__[self.context.__name__]
+        result = hexc.HTTPNoContent()
         return result

@@ -24,8 +24,8 @@ from nti.recorder.interfaces import ITransactionRecord
 from nti.property.property import Lazy
 
 
-@component.adapter(ITransactionRecord)
 @interface.implementer(IACLProvider)
+@component.adapter(ITransactionRecord)
 class TransactionRecordACLProvider(object):
 
     def __init__(self, context):

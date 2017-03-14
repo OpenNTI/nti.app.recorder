@@ -41,4 +41,6 @@ def parse_datetime(t):
         result = time.mktime(result.timetuple())
     elif isinstance(t, (date, datetime)):
         result = time.mktime(t.timetuple())
+    if not isinstance(result, float):
+        raise ValueError("Invalid date[time]")
     return result
