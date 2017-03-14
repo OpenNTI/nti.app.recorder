@@ -69,11 +69,21 @@ class TestViews(ApplicationLayerTest):
             rec_oid = to_external_ntiid_oid(ichigo)
 
         res = self.testapp.post_json(
-                '/dataserver2/Objects/%s/@@trim_log' % rec_oid,
-                {'startTime': 1200},
-                status=200)
+            '/dataserver2/Objects/%s/@@trim_log' % rec_oid,
+            {'startTime': 1200},
+            status=200)
         assert_that(res.json_body, has_entry('Items', has_length(1)))
 
         with mock_dataserver.mock_db_trans(self.ds):
             ichigo = self.ds.root['ichigo']
-            assert_that(get_transactions(ichigo), has_length(1))
+            transactions = get_transactions(ichigo)
+            assert_that(transactions, has_length(1))
+            oid = to_external_ntiid_oid(transactions[0])
+
+        res = self.testapp.delete(
+            '/dataserver2/Objects/%s/' % oid,
+            status=204)
+
+        with mock_dataserver.mock_db_trans(self.ds):
+            ichigo = self.ds.root['ichigo']
+            assert_that(get_transactions(ichigo), has_length(0))

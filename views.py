@@ -198,11 +198,21 @@ class TrimTransactionHistoryView(AbstractRecordableObjectView,
 
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
-               request_method='DELETE',
+               request_method='GET',
                context=ITransactionRecord)
-class TransactionRecordDeleteView(AbstractAuthenticatedView):
+class TransactionRecordGetView(AbstractRecordableObjectView):
 
-    def __call__(self):
+    def _do_call(self):
+        return self.context
+
+
+@view_config(route_name="objects.generic.traversal",
+             context=ITransactionRecord,
+             renderer='rest',
+             request_method='DELETE')
+class TransactionRecordDeleteView(AbstractRecordableObjectView):
+
+    def _do_call(self):
         del self.context.__parent__[self.context.__name__]
         result = hexc.HTTPNoContent()
         return result
