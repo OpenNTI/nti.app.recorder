@@ -46,25 +46,29 @@ class Bleach(PersistentPropertyHolder, RecordableMixin):
 
 class TestViews(ApplicationLayerTest):
 
+    def _create_ichigo(self):
+        user = User.get_user(self.default_username)
+        ichigo = Bleach()
+        current_transaction = mock_dataserver.current_transaction
+        current_transaction.add(ichigo)
+        self.ds.root['ichigo'] = ichigo
+        ichigo.creator = user
+        record_transaction(ichigo,
+                           principal=user,
+                           type_="Activation",
+                           ext_value={'shikai': True},
+                           createdTime=1000)
+        record_transaction(ichigo,
+                           principal=user,
+                           type_="Activation",
+                           ext_value={'bankai': True},
+                           createdTime=2000)
+        return ichigo
+
     @WithSharedApplicationMockDS(users=True, testapp=True)
     def test_trim_logs(self):
         with mock_dataserver.mock_db_trans(self.ds):
-            user = User.get_user(self.default_username)
-            ichigo = Bleach()
-            current_transaction = mock_dataserver.current_transaction
-            current_transaction.add(ichigo)
-            self.ds.root['ichigo'] = ichigo
-            ichigo.creator = user
-            record_transaction(ichigo,
-                               principal=user,
-                               type_="Activation",
-                               ext_value={'shikai': True},
-                               createdTime=1000)
-            record_transaction(ichigo,
-                               principal=user,
-                               type_="Activation",
-                               ext_value={'bankai': True},
-                               createdTime=2000)
+            ichigo = self._create_ichigo()
             assert_that(get_transactions(ichigo),  has_length(2))
             rec_oid = to_external_ntiid_oid(ichigo)
 
@@ -78,12 +82,19 @@ class TestViews(ApplicationLayerTest):
             ichigo = self.ds.root['ichigo']
             transactions = get_transactions(ichigo)
             assert_that(transactions, has_length(1))
+
+    @WithSharedApplicationMockDS(users=True, testapp=True)
+    def test_get_delete_log(self):
+        with mock_dataserver.mock_db_trans(self.ds):
+            ichigo = self._create_ichigo()
+            transactions = get_transactions(ichigo)
+            assert_that(transactions, has_length(2))
             oid = to_external_ntiid_oid(transactions[0])
 
-        res = self.testapp.delete(
+        self.testapp.delete(
             '/dataserver2/Objects/%s/' % oid,
             status=204)
 
         with mock_dataserver.mock_db_trans(self.ds):
             ichigo = self.ds.root['ichigo']
-            assert_that(get_transactions(ichigo), has_length(0))
+            assert_that(get_transactions(ichigo), has_length(1))
