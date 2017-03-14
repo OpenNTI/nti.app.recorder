@@ -84,6 +84,22 @@ class TestViews(ApplicationLayerTest):
             assert_that(transactions, has_length(1))
 
     @WithSharedApplicationMockDS(users=True, testapp=True)
+    def test_clear_logs(self):
+        with mock_dataserver.mock_db_trans(self.ds):
+            ichigo = self._create_ichigo()
+            rec_oid = to_external_ntiid_oid(ichigo)
+
+        res = self.testapp.post_json(
+            '/dataserver2/Objects/%s/@@clear_log' % rec_oid,
+            status=200)
+        assert_that(res.json_body, has_entry('Items', has_length(2)))
+
+        with mock_dataserver.mock_db_trans(self.ds):
+            ichigo = self.ds.root['ichigo']
+            transactions = get_transactions(ichigo)
+            assert_that(transactions, has_length(0))
+
+    @WithSharedApplicationMockDS(users=True, testapp=True)
     def test_get_delete_log(self):
         with mock_dataserver.mock_db_trans(self.ds):
             ichigo = self._create_ichigo()
