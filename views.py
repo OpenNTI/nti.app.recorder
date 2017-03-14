@@ -42,6 +42,9 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.recorder.interfaces import ITransactionRecord
 from nti.recorder.interfaces import ITransactionRecordHistory
 
+from nti.recorder.record import get_transactions
+from nti.recorder.record import remove_transaction_history
+
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
@@ -50,7 +53,7 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 class AbstractRecordableObjectView(AbstractAuthenticatedView):
 
     def _chek_perms(self):
-        if not (has_permission(ACT_UPDATE, self.context, self.request)
+        if not (   has_permission(ACT_UPDATE, self.context, self.request)
                 or has_permission(ACT_CONTENT_EDIT, self.context, self.request)):
             raise hexc.HTTPForbidden()
 
@@ -152,6 +155,25 @@ class TransactionHistoryView(AbstractRecordableObjectView):
         history = ITransactionRecordHistory(self.context)
         items = sorted(history.query(start_time=startTime, end_time=endTime))
         result[TOTAL] = result[ITEM_COUNT] = len(items)
+        return result
+
+
+@view_config(name='clear_log')
+@view_config(name='RemoveTransactionHistory')
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               context=IRecordable,
+                request_method='POST')
+class RemoveTransactionHistoryView(AbstractRecordableObjectView):
+
+    def __call__(self):
+        result = LocatedExternalDict()
+        if IRecordableContainer.providedBy(self.context):
+            self.context.child_order_unlock()
+        self.context.unlock()
+        result[ITEMS] = get_transactions(self.context, sort=True)
+        remove_transaction_history(self.context)
+        lifecycleevent.modified(self.context)
         return result
 
 

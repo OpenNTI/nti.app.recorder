@@ -49,7 +49,6 @@ from nti.recorder.index import IX_CHILD_ORDER_LOCKED
 
 from nti.recorder.interfaces import ITransactionRecord
 
-from nti.recorder.record import get_transactions
 from nti.recorder.record import remove_transaction_history
 
 from nti.zope_catalog.catalog import ResultSet
@@ -64,24 +63,6 @@ def _is_locked(context):
           or (    IRecordableContainer.providedBy(context)
               and context.isChildOrderLocked())
     return result
-
-
-@view_config(permission=ACT_NTI_ADMIN)
-@view_defaults(route_name='objects.generic.traversal',
-               renderer='rest',
-               context=IRecordable,
-               name='RemoveTransactionHistory')
-class RemoveTransactionHistoryView(AbstractAuthenticatedView):
-
-    def __call__(self):
-        result = LocatedExternalDict()
-        if IRecordableContainer.providedBy(self.context):
-            self.context.child_order_unlock()
-        self.context.unlock()
-        result[ITEMS] = get_transactions(self.context, sort=True)
-        remove_transaction_history(self.context)
-        lifecycleevent.modified(self.context)
-        return result
 
 
 @view_config(permission=ACT_NTI_ADMIN)

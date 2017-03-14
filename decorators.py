@@ -140,11 +140,12 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
                     elements=('@@audit_log',))
         added.append(link)
         
-        link = Link(context,
-                    method='POST',
-                    rel='trim_log',
-                    elements=('@@trim_log',))
-        added.append(link)
+        for name in ('trim_log', 'clear_log'):
+            link = Link(context,
+                        method='POST',
+                        rel=name,
+                        elements=('@@%s' % name,))
+            added.append(link)
 
         # add links
         for link in added:

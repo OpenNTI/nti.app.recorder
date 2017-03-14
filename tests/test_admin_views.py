@@ -24,11 +24,6 @@ from zope.dublincore.interfaces import IDCExtended
 
 from zope.intid.interfaces import IIntIds
 
-from zope.security.interfaces import IParticipation
-from zope.security.management import endInteraction
-from zope.security.management import newInteraction
-from zope.security.management import restoreInteraction
-
 from nti.coremetadata.interfaces import IRecordable
 
 from nti.coremetadata.mixins import RecordableMixin
@@ -76,31 +71,27 @@ class TestAdminViews(ApplicationLayerTest):
         assert_that(res.json_body, has_entry('ItemCount', is_(0)))
         assert_that(res.json_body, has_entry('Items', has_length(0)))
 
-    @mock_dataserver.WithMockDSTrans
-    def test_recordable(self):
-        user = User.create_user(dataserver=self.ds,
-                                username='bleach@nextthought.com')
-        
-        endInteraction()
-        try:
-            newInteraction(IParticipation(user))
+    @WithSharedApplicationMockDS(users=True, testapp=True)
+    def test_trim_logs(self):
+        with mock_dataserver.mock_db_trans(self.ds):
+            user = User.get_user(self.default_username)
             ichigo = Bleach()
             current_transaction = mock_dataserver.current_transaction
             current_transaction.add(ichigo)
+            self.ds.root['ichigo'] = ichigo
+            ichigo.creator = user
             record = record_transaction(ichigo, 
                                         principal=user,
                                         type_="Activation",
                                         ext_value={'bankai':True})
             assert_that(record, is_not(none()))
-        finally:
-            restoreInteraction()            
         
-        intids = component.getUtility(IIntIds)
-        assert_that(intids.queryId(record), is_not(none()))
-
-        transactions = list(get_transactions())
-        assert_that(transactions, has_length(1))
-        assert_that(record, is_in(transactions))
-        
-        adapted = IDCExtended(ichigo)
-        assert_that(adapted.creators, is_(()))
+            intids = component.getUtility(IIntIds)
+            assert_that(intids.queryId(record), is_not(none()))
+    
+            transactions = list(get_transactions())
+            assert_that(transactions, has_length(1))
+            assert_that(record, is_in(transactions))
+            
+            adapted = IDCExtended(ichigo)
+            assert_that(adapted.creators, is_(()))
