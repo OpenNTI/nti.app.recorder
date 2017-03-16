@@ -153,7 +153,8 @@ class TransactionHistoryView(AbstractRecordableObjectView):
         # perform query
         result = LocatedExternalDict()
         history = ITransactionRecordHistory(self.context)
-        items = sorted(history.query(start_time=startTime, end_time=endTime))
+        result[ITEMS] = items = sorted(history.query(start_time=startTime, 
+                                                     end_time=endTime))
         result[TOTAL] = result[ITEM_COUNT] = len(items)
         return result
 
