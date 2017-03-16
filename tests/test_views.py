@@ -89,6 +89,11 @@ class TestViews(ApplicationLayerTest):
             ichigo = self._create_ichigo()
             rec_oid = to_external_ntiid_oid(ichigo)
 
+        res = self.testapp.get(
+            '/dataserver2/Objects/%s/@@audit_log' % rec_oid,
+            status=200)
+        assert_that(res.json_body, has_entry('Items', has_length(2)))
+
         res = self.testapp.post_json(
             '/dataserver2/Objects/%s/@@clear_log' % rec_oid,
             status=200)
