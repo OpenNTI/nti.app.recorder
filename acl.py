@@ -12,6 +12,10 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.security.interfaces import IPrincipal
+
+from nti.dataserver.authorization import ROLE_ADMIN
+
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
@@ -37,6 +41,9 @@ class TransactionRecordACLProvider(object):
 
     @Lazy
     def __acl__(self):
-        creator = self.context.creator or self.context.principal
-        result = acl_from_aces(ace_allowing(creator, ALL_PERMISSIONS, type(self)))
-        return result
+        aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, self), ]
+        creator = self.context.creator or self.context.username
+        creator = IPrincipal(creator, None)
+        if creator is not None:
+            aces.append(ace_allowing(creator, ALL_PERMISSIONS, self))
+        return acl_from_aces(aces)
