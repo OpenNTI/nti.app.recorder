@@ -45,5 +45,5 @@ class TransactionRecordACLProvider(object):
         creator = self.context.creator or self.context.username
         creator = IPrincipal(creator, None)
         if creator is not None:
-            aces.append(ace_allowing(creator, ALL_PERMISSIONS, self))
+            aces.append(ace_allowing(creator, ALL_PERMISSIONS, type(self)))
         return acl_from_aces(aces)
