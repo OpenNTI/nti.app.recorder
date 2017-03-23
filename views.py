@@ -22,6 +22,7 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.externalization.error import raise_json_error
 
+from nti.app.externalization.view_mixins import BatchingUtilsMixin
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.recorder import MessageFactory as _
@@ -53,7 +54,7 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 class AbstractRecordableObjectView(AbstractAuthenticatedView):
 
     def _chek_perms(self):
-        if not (   has_permission(ACT_UPDATE, self.context, self.request)
+        if not (has_permission(ACT_UPDATE, self.context, self.request)
                 or has_permission(ACT_CONTENT_EDIT, self.context, self.request)):
             raise hexc.HTTPForbidden()
 
@@ -138,7 +139,11 @@ class SyncLockObjectStatusView(AbstractRecordableObjectView):
                renderer='rest',
                request_method='GET',
                context=IRecordable)
-class TransactionHistoryView(AbstractRecordableObjectView):
+class TransactionHistoryView(AbstractRecordableObjectView,
+                             BatchingUtilsMixin):
+
+    _DEFAULT_BATCH_SIZE = 20
+    _DEFAULT_BATCH_START = 0
 
     def readInput(self):
         return CaseInsensitiveDict(self.request.params)
@@ -152,10 +157,13 @@ class TransactionHistoryView(AbstractRecordableObjectView):
         startTime = parse_datetime(startTime) if startTime else None
         # perform query
         result = LocatedExternalDict()
+        result.__name__ = self.request.view_name
+        result.__parent__ = self.request.context
         history = ITransactionRecordHistory(self.context)
-        result[ITEMS] = items = sorted(history.query(start_time=startTime, 
-                                                     end_time=endTime))
-        result[TOTAL] = result[ITEM_COUNT] = len(items)
+        items = sorted(history.query(start_time=startTime, end_time=endTime))
+        result[TOTAL] = result['TotalItemCount'] = len(items)
+        self._batch_items_iterable(result, items)
+        result[ITEM_COUNT] = len(result[ITEMS])
         return result
 
 
@@ -164,7 +172,7 @@ class TransactionHistoryView(AbstractRecordableObjectView):
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
                context=IRecordable,
-                request_method='POST')
+               request_method='POST')
 class RemoveTransactionHistoryView(AbstractRecordableObjectView):
 
     def __call__(self):
