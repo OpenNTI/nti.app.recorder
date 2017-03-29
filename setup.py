@@ -7,9 +7,11 @@ entry_points = {
     ],
 }
 
+
 def _read(fname):
     with codecs.open(fname, encoding='utf-8') as f:
         return f.read()
+
 
 setup(
     name='nti.app.recorder',
@@ -32,8 +34,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     include_package_data=True,
-    namespace_packages=['nti'],
-    tests_require=TESTS_REQUIRE,
+    namespace_packages=['nti', 'nti.app'],
     install_requires=[
         'setuptools',
         'nti.recorder'
