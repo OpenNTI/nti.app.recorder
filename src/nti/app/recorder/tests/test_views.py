@@ -17,13 +17,13 @@ from zope.annotation.interfaces import IAttributeAnnotatable
 
 from nti.base.interfaces import ICreated
 
-from nti.coremetadata.interfaces import IRecordable
-
-from nti.coremetadata.mixins import RecordableMixin
-
 from nti.dataserver.users import User
 
 from nti.externalization.oids import to_external_ntiid_oid
+
+from nti.recorder.interfaces import IRecordable
+
+from nti.recorder.mixins import RecordableMixin
 
 from nti.recorder.record import get_transactions
 

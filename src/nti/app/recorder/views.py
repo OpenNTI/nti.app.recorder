@@ -31,16 +31,15 @@ from nti.app.recorder.utils import parse_datetime
 
 from nti.appserver.pyramid_authorization import has_permission
 
-from nti.coremetadata.interfaces import IRecordable
-from nti.coremetadata.interfaces import IRecordableContainer
-
 from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
+from nti.recorder.interfaces import IRecordableContainer
 from nti.recorder.interfaces import ITransactionRecordHistory
 
 from nti.recorder.record import get_transactions

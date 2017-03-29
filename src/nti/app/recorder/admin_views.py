@@ -27,9 +27,6 @@ from nti.app.recorder.utils import parse_datetime
 
 from nti.common.string import is_true
 
-from nti.coremetadata.interfaces import IRecordable
-from nti.coremetadata.interfaces import IRecordableContainer
-
 from nti.dataserver.authorization import ACT_NTI_ADMIN
 
 from nti.dataserver.interfaces import IDataserver
@@ -47,7 +44,9 @@ from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder.index import IX_CHILD_ORDER_LOCKED
 
+from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
+from nti.recorder.interfaces import IRecordableContainer
 
 from nti.recorder.record import remove_transaction_history
 

@@ -24,9 +24,6 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 
 from nti.appserver.pyramid_authorization import has_permission
 
-from nti.coremetadata.interfaces import IRecordable
-from nti.coremetadata.interfaces import IRecordableContainer
-
 from nti.dataserver.authorization import ACT_UPDATE
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -36,7 +33,9 @@ from nti.links.links import Link
 
 from nti.property.property import Lazy
 
+from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
+from nti.recorder.interfaces import IRecordableContainer
 
 from nti.recorder.utils import decompress
 

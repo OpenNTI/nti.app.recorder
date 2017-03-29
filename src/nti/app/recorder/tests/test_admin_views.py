@@ -24,13 +24,13 @@ from zope.dublincore.interfaces import IDCExtended
 
 from zope.intid.interfaces import IIntIds
 
-from nti.coremetadata.interfaces import IRecordable
-
-from nti.coremetadata.mixins import RecordableMixin
-
 from nti.dataserver.users import User
 
 from nti.recorder.index import get_transactions
+
+from nti.recorder.interfaces import IRecordable
+
+from nti.recorder.mixins import RecordableMixin
 
 from nti.recorder.utils import record_transaction
 
