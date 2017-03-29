@@ -10,6 +10,11 @@
 
 	<include package="nti.recorder" />
 		
+	<!-- Generations -->
+	<utility factory=".generations.install._SchemaManager"
+			 name="nti.dataserver-recorder"
+			 provides="zope.generations.interfaces.IInstallableSchemaManager" />
+			 
 	<!-- ACLs -->
 	<adapter factory=".acl.TransactionRecordACLProvider" />
 	
