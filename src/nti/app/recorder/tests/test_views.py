@@ -21,8 +21,6 @@ from nti.dataserver.users import User
 
 from nti.externalization.oids import to_external_ntiid_oid
 
-from nti.recorder.interfaces import IRecordable
-
 from nti.recorder.mixins import RecordableMixin
 
 from nti.recorder.record import get_transactions
@@ -38,7 +36,7 @@ from nti.app.testing.decorators import WithSharedApplicationMockDS
 from nti.dataserver.tests import mock_dataserver
 
 
-@interface.implementer(IRecordable, ICreated, IAttributeAnnotatable)
+@interface.implementer(ICreated, IAttributeAnnotatable)
 class Bleach(PersistentPropertyHolder, RecordableMixin):
     __name__ = None
     __parent__ = None
