@@ -102,10 +102,13 @@ def do_evolve(context):
 
         # unregister columns
         for name in (IX_TID, IX_TYPE, IX_PRINCIPAL, IX_ATTRIBUTES, IX_CREATEDTIME):
-            index = recorder[name]
-            intids.unregister(index)
-            del recorder[name]
-            index.__parent__ = None
+            try:
+                index = recorder[name]
+                intids.unregister(index)
+                del recorder[name]
+                index.__parent__ = None
+            except KeyError:
+                pass
 
         c_rec = c_trx = 0
         for doc_id in all_ids:

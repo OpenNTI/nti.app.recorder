@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 1
+generation = 2
 
 from zope import interface
 
@@ -20,6 +20,7 @@ from zope.generations.interfaces import IInstallableSchemaManager
 from zope.intid.interfaces import IIntIds
 
 from nti.recorder.index import install_recorder_catalog
+from nti.recorder.index import install_transaction_catalog
 
 
 @interface.implementer(IInstallableSchemaManager)
@@ -29,7 +30,7 @@ class _SchemaManager(BaseSchemaManager):
         super(_SchemaManager, self).__init__(
             generation=generation,
             minimum_generation=generation,
-            package_name='nti.app.recorder')
+            package_name='nti.app.recorder.generations')
 
     def install(self, context):
         evolve(context)
@@ -46,3 +47,4 @@ def install_catalog(context):
     lsm = dataserver_folder.getSiteManager()
     intids = lsm.getUtility(IIntIds)
     install_recorder_catalog(dataserver_folder, intids)
+    install_transaction_catalog(dataserver_folder, intids)

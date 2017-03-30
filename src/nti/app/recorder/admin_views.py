@@ -36,13 +36,14 @@ from nti.dataserver.interfaces import IDataserverFolder
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.recorder import get_recorder_catalog
-
 from nti.recorder.index import IX_LOCKED
 from nti.recorder.index import IX_MIMETYPE
 from nti.recorder.index import IX_PRINCIPAL
 from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder.index import IX_CHILD_ORDER_LOCKED
+
+from nti.recorder.index import get_recorder_catalog
+from nti.recorder.index import get_transaction_catalog
 
 from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
@@ -202,7 +203,7 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
         intids = component.getUtility(IIntIds)
         result = LocatedExternalDict()
         items = result[ITEMS] = {}
-        catalog = get_recorder_catalog()
+        catalog = get_transaction_catalog()
         query = {
             IX_CREATEDTIME: {'between': (startTime, endTime)}
         }
