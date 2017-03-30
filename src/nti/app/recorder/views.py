@@ -11,7 +11,10 @@ logger = __import__('logging').getLogger(__name__)
 
 from requests.structures import CaseInsensitiveDict
 
+from zope import component
 from zope import lifecycleevent
+
+from zope.intid.interfaces import IIntIds
 
 from pyramid import httpexceptions as hexc
 
@@ -34,8 +37,14 @@ from nti.appserver.pyramid_authorization import has_permission
 from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
+from nti.coremetadata.interfaces import IUser
+
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
+
+from nti.recorder.index import IX_PRINCIPAL
+from nti.recorder.index import IX_CREATEDTIME
+from nti.recorder.index import get_transaction_catalog
 
 from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
@@ -245,4 +254,52 @@ class TransactionRecordDeleteView(AbstractRecordableObjectView):
     def _do_call(self):
         del self.context.__parent__[self.context.__name__]
         result = hexc.HTTPNoContent()
+        return result
+
+
+@view_config(name='audit_log')
+@view_config(name='TransactionHistory')
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='GET',
+               context=IUser,
+               permission=ACT_UPDATE)
+class UserTransactionHistoryView(AbstractAuthenticatedView,
+                                 BatchingUtilsMixin):
+
+    _DEFAULT_BATCH_SIZE = 20
+    _DEFAULT_BATCH_START = 0
+
+    def readInput(self):
+        return CaseInsensitiveDict(self.request.params)
+
+    def __call__(self):
+        values = self.readInput()
+        intids = component.getUtility(IIntIds)
+        endTime = values.get('endTime') or values.get('endDate')
+        startTime = values.get('startTime') or values.get('startDate')
+        endTime = parse_datetime(endTime) if endTime else None
+        startTime = parse_datetime(startTime) if startTime else None
+
+        result = LocatedExternalDict()
+        result.__name__ = self.request.view_name
+        result.__parent__ = self.request.context
+        items = result[ITEMS] = []
+
+        # query catalog
+        catalog = get_transaction_catalog()
+        query = {
+            IX_PRINCIPAL: {'any_of': (self.context.username)},
+            IX_CREATEDTIME: {'between': (startTime, endTime)}
+        }
+        for doc_id in catalog.apply(query) or ():
+            obj = intids.queryObject(doc_id)
+            if ITransactionRecord.providedBy(obj):
+                items.append(obj)
+
+        # sort & batch
+        items.sort(key=lambda x: x.createdTime, reverse=True)
+        result[TOTAL] = result['TotalItemCount'] = len(items)
+        self._batch_items_iterable(result, items)
+        result[ITEM_COUNT] = len(result[ITEMS])
         return result
