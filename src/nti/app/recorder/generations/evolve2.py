@@ -107,15 +107,19 @@ def do_evolve(context):
             del recorder[name]
             index.__parent__ = None
 
+        c_rec = c_trx = 0
         for doc_id in all_ids:
             obj = intids.queryObject(doc_id)
             if ITransactionRecord.providedBy(obj):
                 transaction.index_doc(doc_id, obj)
+                c_trx += 1
             elif IRecordable.providedBy(obj):
                 recorder.index_doc(doc_id, obj)
+                c_rec += 1
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
-    logger.info('Dataserver evolution %s done.', generation)
+    logger.info('Dataserver evolution %s done. %s recordable(s), %s record(s)',
+                generation, c_rec, c_trx)
 
 
 def evolve(context):
