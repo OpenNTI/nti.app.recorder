@@ -289,7 +289,7 @@ class UserTransactionHistoryView(AbstractAuthenticatedView,
         # query catalog
         catalog = get_transaction_catalog()
         query = {
-            IX_PRINCIPAL: {'any_of': (self.context.username)},
+            IX_PRINCIPAL: {'any_of': (self.context.username,)},
             IX_CREATEDTIME: {'between': (startTime, endTime)}
         }
         for doc_id in catalog.apply(query) or ():
