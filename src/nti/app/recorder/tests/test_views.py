@@ -64,6 +64,17 @@ class TestViews(ApplicationLayerTest):
         return ichigo
 
     @WithSharedApplicationMockDS(users=True, testapp=True)
+    def test_audit_logs(self):
+        with mock_dataserver.mock_db_trans(self.ds):
+            ichigo = self._create_ichigo()
+            assert_that(get_transactions(ichigo),  has_length(2))
+
+        res = self.testapp.get(
+            '/dataserver2/users/%s/@@audit_log' % self.default_username,
+            status=200)
+        assert_that(res.json_body, has_entry('Items', has_length(2)))
+
+    @WithSharedApplicationMockDS(users=True, testapp=True)
     def test_trim_logs(self):
         with mock_dataserver.mock_db_trans(self.ds):
             ichigo = self._create_ichigo()
