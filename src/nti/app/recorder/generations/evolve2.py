@@ -121,7 +121,7 @@ def do_evolve(context):
                 c_rec += 1
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
-    logger.info('Dataserver evolution %s done. %s recordable(s), %s record(s)',
+    logger.info('Evolution %s done. %s recordable(s), %s record(s)',
                 generation, c_rec, c_trx)
 
 
