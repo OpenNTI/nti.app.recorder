@@ -82,7 +82,7 @@ class TestAdminViews(ApplicationLayerTest):
             ichigo.creator = user
             record = record_transaction(ichigo, 
                                         principal=user,
-                                        type_="Activation",
+                                        type_=u"Activation",
                                         ext_value={'bankai':True})
             assert_that(record, is_not(none()))
         

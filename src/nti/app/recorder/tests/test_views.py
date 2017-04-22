@@ -53,12 +53,12 @@ class TestViews(ApplicationLayerTest):
         ichigo.creator = user
         record_transaction(ichigo,
                            principal=user,
-                           type_="Activation",
+                           type_=u"Activation",
                            ext_value={'shikai': True},
                            createdTime=1000)
         record_transaction(ichigo,
                            principal=user,
-                           type_="Activation",
+                           type_=u"Activation",
                            ext_value={'bankai': True},
                            createdTime=2000)
         return ichigo
