@@ -67,7 +67,7 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 def _is_locked(context):
     result = (IRecordable.providedBy(context) and context.isLocked()) \
-        or (IRecordableContainer.providedBy(context)
+        or (    IRecordableContainer.providedBy(context)
             and context.isChildOrderLocked())
     return result
 
