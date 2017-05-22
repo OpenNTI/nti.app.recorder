@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -54,12 +54,12 @@ class TestViews(ApplicationLayerTest):
         record_transaction(ichigo,
                            principal=user,
                            type_=u"Activation",
-                           ext_value={'shikai': True},
+                           ext_value={u'shikai': True},
                            createdTime=1000)
         record_transaction(ichigo,
                            principal=user,
                            type_=u"Activation",
-                           ext_value={'bankai': True},
+                           ext_value={u'bankai': True},
                            createdTime=2000)
         return ichigo
 
@@ -69,9 +69,9 @@ class TestViews(ApplicationLayerTest):
             ichigo = self._create_ichigo()
             assert_that(get_transactions(ichigo),  has_length(2))
 
-        res = self.testapp.get(
-            '/dataserver2/users/%s/@@audit_log' % self.default_username,
-            status=200)
+        url = '/dataserver2/users/%s/@@audit_log'
+        res = self.testapp.get(url % self.default_username,
+                               status=200)
         assert_that(res.json_body, has_entry('Items', has_length(2)))
 
     @WithSharedApplicationMockDS(users=True, testapp=True)
@@ -81,10 +81,10 @@ class TestViews(ApplicationLayerTest):
             assert_that(get_transactions(ichigo),  has_length(2))
             rec_oid = to_external_ntiid_oid(ichigo)
 
-        res = self.testapp.post_json(
-            '/dataserver2/Objects/%s/@@trim_log' % rec_oid,
-            {'startTime': 1200},
-            status=200)
+        url = '/dataserver2/Objects/%s/@@trim_log'
+        res = self.testapp.post_json(url % rec_oid,
+                                     {'startTime': 1200},
+                                     status=200)
         assert_that(res.json_body, has_entry('Items', has_length(1)))
 
         with mock_dataserver.mock_db_trans(self.ds):
@@ -98,14 +98,14 @@ class TestViews(ApplicationLayerTest):
             ichigo = self._create_ichigo()
             rec_oid = to_external_ntiid_oid(ichigo)
 
-        res = self.testapp.get(
-            '/dataserver2/Objects/%s/@@audit_log' % rec_oid,
-            status=200)
+        url = '/dataserver2/Objects/%s/@@audit_log'
+        res = self.testapp.get(url % rec_oid,
+                               status=200)
         assert_that(res.json_body, has_entry('Items', has_length(2)))
 
-        res = self.testapp.post_json(
-            '/dataserver2/Objects/%s/@@clear_log' % rec_oid,
-            status=200)
+        url = '/dataserver2/Objects/%s/@@clear_log'
+        res = self.testapp.post_json(url % rec_oid,
+                                     status=200)
         assert_that(res.json_body, has_entry('Items', has_length(2)))
 
         with mock_dataserver.mock_db_trans(self.ds):
@@ -121,9 +121,8 @@ class TestViews(ApplicationLayerTest):
             assert_that(transactions, has_length(2))
             oid = to_external_ntiid_oid(transactions[0])
 
-        self.testapp.delete(
-            '/dataserver2/Objects/%s/' % oid,
-            status=204)
+        url = '/dataserver2/Objects/%s/'
+        self.testapp.delete(url % oid, status=204)
 
         with mock_dataserver.mock_db_trans(self.ds):
             ichigo = self.ds.root['ichigo']
