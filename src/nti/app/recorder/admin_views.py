@@ -53,7 +53,8 @@ from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
 from nti.recorder.interfaces import IRecordableContainer
 
-from nti.recorder.record import remove_transaction_history, get_transactions
+from nti.recorder.record import get_transactions
+from nti.recorder.record import remove_transaction_history
 
 from nti.site.hostpolicy import get_all_host_sites
 
