@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -14,6 +14,8 @@ from hamcrest import is_not
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import has_entries
+from hamcrest import greater_than_or_equal_to
 
 from zope import component
 from zope import interface
@@ -46,8 +48,8 @@ from nti.dataserver.tests import mock_dataserver
 @interface.implementer(IRecordable, IAttributeAnnotatable)
 class Bleach(PersistentPropertyHolder, RecordableMixin):
     pass
-        
-        
+
+
 class TestAdminViews(ApplicationLayerTest):
 
     @WithSharedApplicationMockDS(users=True, testapp=True)
@@ -80,18 +82,32 @@ class TestAdminViews(ApplicationLayerTest):
             current_transaction.add(ichigo)
             self.ds.root['ichigo'] = ichigo
             ichigo.creator = user
-            record = record_transaction(ichigo, 
+            record = record_transaction(ichigo,
                                         principal=user,
                                         type_=u"Activation",
-                                        ext_value={'bankai':True})
+                                        ext_value={u'bankai': True})
             assert_that(record, is_not(none()))
-        
+
             intids = component.getUtility(IIntIds)
             assert_that(intids.queryId(record), is_not(none()))
-    
+
             transactions = list(get_transactions())
             assert_that(transactions, has_length(1))
             assert_that(record, is_in(transactions))
-            
+
             adapted = IDCExtended(ichigo)
             assert_that(adapted.creators, is_(()))
+
+    @WithSharedApplicationMockDS(users=True, testapp=True)
+    def test_rebuild_catalogs(self):
+        res = self.testapp.post('/dataserver2/@@RebuildTransactionCatalog',
+                                status=200)
+        assert_that(res.json_body,
+                    has_entries('Total', is_(greater_than_or_equal_to(0)),
+                                'ItemCount', is_(greater_than_or_equal_to(0))))
+
+        res = self.testapp.post('/dataserver2/@@RebuildRecorderCatalog',
+                                status=200)
+        assert_that(res.json_body,
+                    has_entries('Total', is_(greater_than_or_equal_to(0)),
+                                'ItemCount', is_(greater_than_or_equal_to(0))))
