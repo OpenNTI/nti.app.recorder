@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -13,6 +13,8 @@ from requests.structures import CaseInsensitiveDict
 
 from zope import component
 from zope import lifecycleevent
+
+from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
@@ -43,13 +45,17 @@ from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder.index import IX_CHILD_ORDER_LOCKED
 
 from nti.recorder.index import get_recorder_catalog
+from nti.recorder.index import create_recorder_catalog
 from nti.recorder.index import get_transaction_catalog
+from nti.recorder.index import create_transaction_catalog
 
 from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
 from nti.recorder.interfaces import IRecordableContainer
 
-from nti.recorder.record import remove_transaction_history
+from nti.recorder.record import remove_transaction_history, get_transactions
+
+from nti.site.hostpolicy import get_all_host_sites
 
 from nti.zope_catalog.catalog import ResultSet
 
@@ -59,9 +65,9 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 
 def _is_locked(context):
-    result =  (IRecordable.providedBy(context) and context.isLocked()) \
-          or (    IRecordableContainer.providedBy(context)
-              and context.isChildOrderLocked())
+    result = (IRecordable.providedBy(context) and context.isLocked()) \
+        or (IRecordableContainer.providedBy(context)
+            and context.isChildOrderLocked())
     return result
 
 
@@ -120,7 +126,7 @@ class GetLockedObjectsView(AbstractAuthenticatedView, BatchingUtilsMixin):
         accept = accept.split(',') if accept else ()
         if accept and '*/*' not in accept:
             accept = {e.strip().lower() for e in accept if e}
-            accept.discard(u'')
+            accept.discard('')
         else:
             accept = ()
 
@@ -187,9 +193,9 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
         values = CaseInsensitiveDict(**request.params)
         term = values.get('term') or values.get('search')
         usernames = values.get('usernames') \
-                 or values.get('username') \
-                 or values.get('users') \
-                 or values.get('user')
+            or values.get('username') \
+            or values.get('users') \
+            or values.get('user')
         if term:
             usernames = username_search(term)
         elif usernames:
@@ -198,7 +204,8 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
         endTime = values.get('endTime') or values.get('endDate')
         startTime = values.get('startTime') or values.get('startDate')
         endTime = parse_datetime(endTime) if endTime is not None else None
-        startTime = parse_datetime(startTime) if startTime is not None else None
+        startTime = parse_datetime(
+            startTime) if startTime is not None else None
 
         intids = component.getUtility(IIntIds)
         result = LocatedExternalDict()
@@ -226,3 +233,80 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
         for values in items.values():
             values.sort(key=lambda x: x.createdTime)
         return result
+
+
+class RebuildCatalogMixinView(AbstractAuthenticatedView):
+
+    def _catalog(self):
+        raise NotImplementedError
+
+    def _add_indices(self, catalog, intids):
+        raise NotImplementedError
+
+    def _indexables(self, recordable):
+        raise NotImplementedError
+
+    def __call__(self):
+        intids = component.getUtility(IIntIds)
+        # remove indexes
+        catalog = self._catalog()
+        for name, index in list(catalog.items()):
+            intids.unregister(index)
+            del catalog[name]
+        # recreate indexes
+        self._add_indices(catalog, intids)
+        for index in catalog.values():
+            intids.register(index)
+        # reindex
+        seen = set()
+        for host_site in get_all_host_sites():  # check all sites
+            logger.info("Processing site %s", host_site.__name__)
+            with current_site(host_site):
+                for recordable in list(component.getUtilitiesFor(IRecordable)):
+                    for indexable in self._indexables(recordable):
+                        doc_id = intids.queryId(indexable)
+                        if doc_id is None or doc_id in seen:
+                            continue
+                        seen.add(doc_id)
+                        catalog.index_doc(doc_id, indexable)
+        result = LocatedExternalDict()
+        result[ITEM_COUNT] = result[TOTAL] = len(seen)
+        return result
+
+
+@view_config(permission=ACT_NTI_ADMIN)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='POST',
+               context=IDataserverFolder,
+               name='RebuildTransactionCatalog')
+class RebuildTransactionCatalogView(RebuildCatalogMixinView):
+
+    def _catalog(self):
+        return get_transaction_catalog()
+
+    def _add_indices(self, catalog, intids):
+        create_transaction_catalog(catalog, family=intids.family)
+        return catalog
+
+    def _indexables(self, recordable):
+        return get_transactions(recordable) or ()
+
+
+@view_config(permission=ACT_NTI_ADMIN)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='POST',
+               context=IDataserverFolder,
+               name='RebuildRecorderCatalog')
+class RebuildRecorderCatalogView(RebuildCatalogMixinView):
+
+    def _catalog(self):
+        return get_recorder_catalog()
+
+    def _add_indices(self, catalog, intids):
+        create_recorder_catalog(catalog, family=intids.family)
+        return catalog
+
+    def _indexables(self, recordable):
+        return (recordable,)
