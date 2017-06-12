@@ -117,9 +117,8 @@ class GetLockedObjectsView(AbstractAuthenticatedView, BatchingUtilsMixin):
     _DEFAULT_BATCH_START = 0
     _DEFAULT_BATCH_SIZE = 100
 
-    def readInput(self, value=None):
-        result = CaseInsensitiveDict(self.request.params)
-        return result
+    def readInput(self):
+        return CaseInsensitiveDict(self.request.params)
 
     def __call__(self):
         values = self.readInput()
