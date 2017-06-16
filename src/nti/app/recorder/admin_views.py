@@ -45,9 +45,7 @@ from nti.recorder.index import IX_CREATEDTIME
 from nti.recorder.index import IX_CHILD_ORDER_LOCKED
 
 from nti.recorder.index import get_recorder_catalog
-from nti.recorder.index import create_recorder_catalog
 from nti.recorder.index import get_transaction_catalog
-from nti.recorder.index import create_transaction_catalog
 
 from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
@@ -193,9 +191,9 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
         values = CaseInsensitiveDict(**request.params)
         term = values.get('term') or values.get('search')
         usernames = values.get('usernames') \
-            or values.get('username') \
-            or values.get('users') \
-            or values.get('user')
+                 or values.get('username') \
+                 or values.get('users') \
+                 or values.get('user')
         if term:
             usernames = username_search(term)
         elif usernames:
@@ -240,9 +238,6 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
     def _catalog(self):
         raise NotImplementedError
 
-    def _add_indices(self, catalog, intids):
-        raise NotImplementedError
-
     def _indexables(self, recordable):
         raise NotImplementedError
 
@@ -250,13 +245,8 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
         intids = component.getUtility(IIntIds)
         # remove indexes
         catalog = self._catalog()
-        for name, index in list(catalog.items()):
-            intids.unregister(index)
-            del catalog[name]
-        # recreate indexes
-        self._add_indices(catalog, intids)
-        for index in catalog.values():
-            intids.register(index)
+        for index in list(catalog.values()):
+            index.clear()
         # reindex
         seen = set()
         for host_site in get_all_host_sites():  # check all sites
@@ -285,10 +275,6 @@ class RebuildTransactionCatalogView(RebuildCatalogMixinView):
     def _catalog(self):
         return get_transaction_catalog()
 
-    def _add_indices(self, catalog, intids):
-        create_transaction_catalog(catalog, family=intids.family)
-        return catalog
-
     def _indexables(self, recordable):
         return get_transactions(recordable) or ()
 
@@ -303,10 +289,6 @@ class RebuildRecorderCatalogView(RebuildCatalogMixinView):
 
     def _catalog(self):
         return get_recorder_catalog()
-
-    def _add_indices(self, catalog, intids):
-        create_recorder_catalog(catalog, family=intids.family)
-        return catalog
 
     def _indexables(self, recordable):
         return (recordable,)
