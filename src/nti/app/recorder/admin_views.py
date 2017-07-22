@@ -291,7 +291,7 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
 
     def __call__(self):
         intids = component.getUtility(IIntIds)
-        # get recordables and clear indexes
+        # get indexables and clear indexes
         catalog = self._catalog()
         indexables = self._get_indexables(catalog, intids)
         for index in list(catalog.values()):
