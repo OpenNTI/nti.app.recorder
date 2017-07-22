@@ -100,14 +100,25 @@ class TestAdminViews(ApplicationLayerTest):
 
     @WithSharedApplicationMockDS(users=True, testapp=True)
     def test_rebuild_catalogs(self):
+        with mock_dataserver.mock_db_trans(self.ds):
+            user = User.get_user(self.default_username)
+            ichigo = Bleach()
+            current_transaction = mock_dataserver.current_transaction
+            current_transaction.add(ichigo)
+            self.ds.root['ichigo'] = ichigo
+            ichigo.creator = user
+            record_transaction(ichigo, principal=user,
+                               type_=u"Activation",
+                               ext_value={u'bankai': True})
+
         res = self.testapp.post('/dataserver2/@@RebuildTransactionCatalog',
                                 status=200)
         assert_that(res.json_body,
-                    has_entries('Total', is_(greater_than_or_equal_to(0)),
-                                'ItemCount', is_(greater_than_or_equal_to(0))))
+                    has_entries('Total', is_(greater_than_or_equal_to(1)),
+                                'ItemCount', is_(greater_than_or_equal_to(1))))
 
         res = self.testapp.post('/dataserver2/@@RebuildRecorderCatalog',
                                 status=200)
         assert_that(res.json_body,
-                    has_entries('Total', is_(greater_than_or_equal_to(0)),
-                                'ItemCount', is_(greater_than_or_equal_to(0))))
+                    has_entries('Total', is_(greater_than_or_equal_to(1)),
+                                'ItemCount', is_(greater_than_or_equal_to(1))))
