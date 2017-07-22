@@ -240,6 +240,13 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
 
     def _indexables(self, recordable):
         raise NotImplementedError
+    
+    def _process_meta(self, obj):
+        try:
+            from nti.metadata import queue_add
+            queue_add(obj)
+        except ImportError:
+            pass
 
     def __call__(self):
         intids = component.getUtility(IIntIds)
@@ -250,7 +257,6 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
         # reindex
         seen = set()
         for host_site in get_all_host_sites():  # check all sites
-            logger.info("Processing site %s", host_site.__name__)
             with current_site(host_site):
                 for recordable in list(component.getUtilitiesFor(IRecordable)):
                     for indexable in self._indexables(recordable):
@@ -259,6 +265,7 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
                             continue
                         seen.add(doc_id)
                         catalog.index_doc(doc_id, indexable)
+                        self._process_meta(indexable)
         result = LocatedExternalDict()
         result[ITEM_COUNT] = result[TOTAL] = len(seen)
         return result

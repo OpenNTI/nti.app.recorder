@@ -45,6 +45,14 @@ class MockDataserver(object):
         return None
 
 
+def process_meta(obj):
+    try:
+        from nti.metadata import queue_removed
+        queue_removed(obj)
+    except ImportError:
+        pass
+
+  
 def do_evolve(context):
     setHooks()
     conn = context.connection
@@ -70,13 +78,14 @@ def do_evolve(context):
                 for trx_id in tuple(trxs):
                     count += 1
                     transaction = intids.queryObject(trx_id)
+                    if ITransactionRecord.providedBy(transaction):
+                        process_meta(transaction)
+                        transaction.__parent__ = None
                     try:
                         intids.force_unregister(trx_id, transaction)
                     except KeyError:
                         pass
                     catalog.unindex_doc(trx_id)
-                    if ITransactionRecord.providedBy(transaction):
-                        transaction.__parent__ = None
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
     logger.info('Evolution %s done. %s record(s) unregistered', 
