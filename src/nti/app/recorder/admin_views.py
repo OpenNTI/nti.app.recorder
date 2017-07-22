@@ -69,7 +69,7 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 def _is_locked(context):
     result = (IRecordable.providedBy(context) and context.isLocked()) \
-          or (  IRecordableContainer.providedBy(context)
+          or (    IRecordableContainer.providedBy(context)
               and context.isChildOrderLocked())
     return result
 
@@ -294,7 +294,7 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
         # get indexables and clear indexes
         catalog = self._catalog()
         indexables = self._get_indexables(catalog, intids)
-        for index in list(catalog.values()):
+        for index in catalog.values():
             index.clear()
         # reindex
         count = 0
