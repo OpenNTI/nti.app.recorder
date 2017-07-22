@@ -28,6 +28,8 @@ from nti.recorder.index import get_transaction_catalog
 
 from nti.recorder.interfaces import ITransactionRecord
 
+from nti.zodb import isBroken
+
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -64,7 +66,7 @@ def do_evolve(context):
         index = catalog[IX_RECORDABLE]
         for rec_id, trxs in list(index.values_to_documents.items()):
             recordable = intids.queryObject(rec_id)
-            if recordable is None:
+            if recordable is None or isBroken(recordable):
                 count += 1
                 for trx_id in tuple(trxs):
                     transaction = intids.queryObject(trx_id)
