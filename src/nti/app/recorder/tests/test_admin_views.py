@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, division
-from nti.coremetadata.interfaces import IDataserver
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -26,6 +25,8 @@ from zope.annotation.interfaces import IAttributeAnnotatable
 from zope.dublincore.interfaces import IDCExtended
 
 from zope.intid.interfaces import IIntIds
+
+from nti.dataserver.interfaces import IDataserver
 
 from nti.dataserver.users import User
 
