@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, division
+from nti.coremetadata.interfaces import IDataserver
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -31,6 +32,7 @@ from nti.dataserver.users import User
 from nti.recorder.index import get_transactions
 
 from nti.recorder.interfaces import IRecordable
+from nti.recorder.interfaces import IRecordables
 
 from nti.recorder.mixins import RecordableMixin
 
@@ -111,14 +113,25 @@ class TestAdminViews(ApplicationLayerTest):
                                type_=u"Activation",
                                ext_value={u'bankai': True})
 
-        res = self.testapp.post('/dataserver2/@@RebuildTransactionCatalog',
-                                status=200)
-        assert_that(res.json_body,
-                    has_entries('Total', is_(greater_than_or_equal_to(1)),
-                                'ItemCount', is_(greater_than_or_equal_to(1))))
-
-        res = self.testapp.post('/dataserver2/@@RebuildRecorderCatalog',
-                                status=200)
-        assert_that(res.json_body,
-                    has_entries('Total', is_(greater_than_or_equal_to(1)),
-                                'ItemCount', is_(greater_than_or_equal_to(1))))
+        class _global_recs(object):
+            def iter_objects(self):
+                dataserver = component.getUtility(IDataserver)
+                yield dataserver.root['ichigo']
+        
+        utility = _global_recs()
+        gsm = component.getGlobalSiteManager()
+        gsm.registerUtility(utility, IRecordables, "bleach")
+        try:
+            res = self.testapp.post('/dataserver2/@@RebuildTransactionCatalog',
+                                    status=200)
+            assert_that(res.json_body,
+                        has_entries('Total', is_(greater_than_or_equal_to(1)),
+                                    'ItemCount', is_(greater_than_or_equal_to(1))))
+    
+            res = self.testapp.post('/dataserver2/@@RebuildRecorderCatalog',
+                                    status=200)
+            assert_that(res.json_body,
+                        has_entries('Total', is_(greater_than_or_equal_to(1)),
+                                    'ItemCount', is_(greater_than_or_equal_to(1))))
+        finally:
+            gsm.unregisterUtility(utility, IRecordables, "bleach")
