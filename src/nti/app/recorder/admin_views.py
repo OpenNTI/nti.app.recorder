@@ -69,8 +69,8 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 def _is_locked(context):
     result = (IRecordable.providedBy(context) and context.isLocked()) \
-        or (    IRecordableContainer.providedBy(context)
-            and context.isChildOrderLocked())
+          or (  IRecordableContainer.providedBy(context)
+              and context.isChildOrderLocked())
     return result
 
 
@@ -81,7 +81,7 @@ def _resolve_objects(doc_ids, intids):
             continue
         yield obj
 
-    
+
 @view_config(permission=ACT_NTI_ADMIN)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
