@@ -14,9 +14,14 @@ from requests.structures import CaseInsensitiveDict
 from zope import component
 from zope import lifecycleevent
 
-from zope.component.hooks import site as current_site
+from zope.index.topic import TopicIndex
+from zope.index.topic.interfaces import ITopicFilteredSet
 
 from zope.intid.interfaces import IIntIds
+
+from zc.catalog.interfaces import IIndexValues
+
+from ZODB.POSException import POSError
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -51,12 +56,11 @@ from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
 from nti.recorder.interfaces import IRecordableContainer
 
-from nti.recorder.record import get_transactions
 from nti.recorder.record import remove_transaction_history
 
-from nti.site.hostpolicy import get_all_host_sites
+from nti.zodb import isBroken
 
-from nti.zope_catalog.catalog import ResultSet
+from nti.zope_catalog.interfaces import IKeywordIndex
 
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
@@ -70,6 +74,14 @@ def _is_locked(context):
     return result
 
 
+def _resolve_objects(doc_ids, intids):
+    for doc_id in doc_ids or ():
+        obj = intids.queryObject(doc_id)
+        if obj is None or isBroken(obj, doc_id):
+            continue
+        yield obj
+
+    
 @view_config(permission=ACT_NTI_ADMIN)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
@@ -92,7 +104,7 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
         }
         child_locked_ids = catalog.apply(query) or catalog.family.IF.LFSet()
         doc_ids = catalog.family.IF.multiunion([locked_ids, child_locked_ids])
-        for recordable in ResultSet(doc_ids or (), intids, True):
+        for recordable in _resolve_objects(doc_ids, intids):
             if _is_locked(recordable):
                 count += 1
                 recordable.unlock()
@@ -156,7 +168,7 @@ class GetLockedObjectsView(AbstractAuthenticatedView, BatchingUtilsMixin):
             mt_ids = catalog.apply(query) or catalog.family.IF.LFSet()
             doc_ids = catalog.family.IF.intersection(doc_ids, mt_ids)
 
-        items = [x for x in ResultSet(doc_ids, intids, True) if _is_locked(x)]
+        items = [x for x in _resolve_objects(doc_ids, intids) if _is_locked(x)]
         result[TOTAL] = len(items)
         self._batch_items_iterable(result, items)
         return result
@@ -202,8 +214,7 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
         endTime = values.get('endTime') or values.get('endDate')
         startTime = values.get('startTime') or values.get('startDate')
         endTime = parse_datetime(endTime) if endTime is not None else None
-        startTime = parse_datetime(
-            startTime) if startTime is not None else None
+        startTime = parse_datetime(startTime) if startTime is not None else None
 
         intids = component.getUtility(IIntIds)
         result = LocatedExternalDict()
@@ -217,7 +228,7 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 
         total = 0
         doc_ids = catalog.apply(query)
-        for context in ResultSet(doc_ids or (), intids, True):
+        for context in _resolve_objects(doc_ids, intids):
             if ITransactionRecord.providedBy(context):
                 total += 1
                 username = context.principal
@@ -238,9 +249,6 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
     def _catalog(self):
         raise NotImplementedError
 
-    def _indexables(self, recordable):
-        raise NotImplementedError
-    
     def _process_meta(self, obj):
         try:
             from nti.metadata import queue_add
@@ -248,26 +256,54 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
         except ImportError:
             pass
 
+    def _get_ids(self, catalog):
+        seen = set()
+        for name, index in catalog.items():
+            try:
+                if IIndexValues.providedBy(index):
+                    seen.update(index.ids())
+                elif IKeywordIndex.providedBy(index):
+                    seen.update(index.ids())
+                elif isinstance(index, TopicIndex):
+                    for filter_index in index._filters.values():
+                        if ITopicFilteredSet.providedBy(filter_index):
+                            seen.update(filter_index.getIds())
+            except (POSError, TypeError):
+                logger.error('Errors getting ids from index "%s" (%s)',
+                             name, index)
+        return seen
+
+    def _get_indexables(self, catalog, intids):
+        result = []
+        for doc_id in self._get_ids(catalog):
+            obj = intids.queryObject(doc_id)
+            if obj is None:
+                continue
+            elif isBroken(obj):
+                try:
+                    intids.force_unregister(doc_id)
+                except KeyError:
+                    pass
+                continue
+            elif IRecordable.providedBy(obj) or ITransactionRecord.providedBy(obj):
+                result.append((doc_id, obj))
+        return result
+
     def __call__(self):
         intids = component.getUtility(IIntIds)
-        # remove indexes
+        # get recordables and clear indexes
         catalog = self._catalog()
+        indexables = self._get_indexables(catalog, intids)
         for index in list(catalog.values()):
             index.clear()
         # reindex
-        seen = set()
-        for host_site in get_all_host_sites():  # check all sites
-            with current_site(host_site):
-                for recordable in list(component.getUtilitiesFor(IRecordable)):
-                    for indexable in self._indexables(recordable):
-                        doc_id = intids.queryId(indexable)
-                        if doc_id is None or doc_id in seen:
-                            continue
-                        seen.add(doc_id)
-                        catalog.index_doc(doc_id, indexable)
-                        self._process_meta(indexable)
+        count = 0
+        for doc_id, indexable in indexables:
+            count += 1
+            catalog.index_doc(doc_id, indexable)
+            self._process_meta(indexable)
         result = LocatedExternalDict()
-        result[ITEM_COUNT] = result[TOTAL] = len(seen)
+        result[ITEM_COUNT] = result[TOTAL] = count
         return result
 
 
@@ -282,9 +318,6 @@ class RebuildTransactionCatalogView(RebuildCatalogMixinView):
     def _catalog(self):
         return get_transaction_catalog()
 
-    def _indexables(self, recordable):
-        return get_transactions(recordable) or ()
-
 
 @view_config(permission=ACT_NTI_ADMIN)
 @view_defaults(route_name='objects.generic.traversal',
@@ -296,6 +329,3 @@ class RebuildRecorderCatalogView(RebuildCatalogMixinView):
 
     def _catalog(self):
         return get_recorder_catalog()
-
-    def _indexables(self, recordable):
-        return (recordable,)
