@@ -67,8 +67,8 @@ def do_evolve(context):
         for rec_id, trxs in list(index.values_to_documents.items()):
             recordable = intids.queryObject(rec_id)
             if recordable is None or isBroken(recordable):
-                count += 1
                 for trx_id in tuple(trxs):
+                    count += 1
                     transaction = intids.queryObject(trx_id)
                     try:
                         intids.force_unregister(trx_id, transaction)
