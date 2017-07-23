@@ -50,8 +50,8 @@ class TestEvolve3(unittest.TestCase):
         catalog = get_transaction_catalog()
         index = catalog[IX_RECORDABLE]
         ValueIndex.index_doc(index, trx_id, generated)
-        
-        context = fudge.Fake().has_attr( connection=conn )
+
+        context = fudge.Fake().has_attr(connection=conn)
         count = evolve3.do_evolve(context)
         assert_that(count, is_(1))
         assert_that(intids.queryId(record), is_(none()))
