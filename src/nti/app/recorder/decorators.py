@@ -29,6 +29,7 @@ from nti.appserver.pyramid_authorization import has_permission
 from nti.dataserver.authorization import ACT_UPDATE
 
 from nti.externalization.interfaces import StandardExternalFields
+from nti.externalization.interfaces import StandardInternalFields
 from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
@@ -47,6 +48,8 @@ LINKS = StandardExternalFields.LINKS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 
+INTERNAL_NTIID = StandardInternalFields.NTIID
+
 
 @component.adapter(ITransactionRecord)
 @interface.implementer(IExternalMappingDecorator)
@@ -59,11 +62,10 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
                 result['ExternalValue'] = decompress(ext_value)
             except Exception:
                 pass
-        intids = component.queryUtility(IIntIds)
         recordable = find_interface(context, IRecordable, strict=False)
         # gather some minor info
-        if intids is not None and recordable is not None:
-            ntiid =  getattr(recordable, NTIID.lower(), None) \
+        if recordable is not None:
+            ntiid =  getattr(recordable, INTERNAL_NTIID, None) \
                   or getattr(recordable, NTIID, None)
             clazz =  getattr(recordable, '__external_class_name__', None) \
                   or recordable.__class__.__name__
@@ -71,14 +73,10 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
             aware = IContentTypeAware(recordable, recordable)
             mimeType = getattr(aware, 'mimeType', None) \
                     or getattr(aware, 'mime_type', None)
-            title = getattr(recordable, 'title', None) \
-                 or getattr(recordable, 'label', None)
             result['Recordable'] = {
                 CLASS: clazz,
                 NTIID: ntiid,
                 MIMETYPE: mimeType,
-                INTID: intids.queryId(recordable),
-                'Title': title
             }
 
 
@@ -94,7 +92,7 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
     def intids(self):
         return component.getUtility(IIntIds)
 
-    def _predicate(self, context, result):
+    def _predicate(self, context, unused_result):
         """
         Only persistent objects for users that have permission.
         """

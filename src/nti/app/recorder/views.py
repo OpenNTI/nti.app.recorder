@@ -215,7 +215,7 @@ class TrimTransactionHistoryView(AbstractRecordableObjectView,
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                 'message': _("Must specified a time range."),
+                                 'message': _(u"Must specified a time range."),
                                  'code': 'InvalidTimeRange'
                              },
                              None)
