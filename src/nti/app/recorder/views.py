@@ -37,7 +37,7 @@ from nti.appserver.pyramid_authorization import has_permission
 from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
-from nti.coremetadata.interfaces import IUser
+from nti.dataserver.interfaces import IUser
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
