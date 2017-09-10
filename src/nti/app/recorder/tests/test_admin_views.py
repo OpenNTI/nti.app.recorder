@@ -28,7 +28,7 @@ from zope.intid.interfaces import IIntIds
 
 from nti.dataserver.interfaces import IDataserver
 
-from nti.dataserver.users import User
+from nti.dataserver.users.users import User
 
 from nti.recorder.index import get_transactions
 
@@ -118,7 +118,7 @@ class TestAdminViews(ApplicationLayerTest):
             def iter_objects(self):
                 dataserver = component.getUtility(IDataserver)
                 yield dataserver.root['ichigo']
-        
+
         utility = _global_recs()
         gsm = component.getGlobalSiteManager()
         gsm.registerUtility(utility, IRecordables, "bleach")
@@ -128,7 +128,7 @@ class TestAdminViews(ApplicationLayerTest):
             assert_that(res.json_body,
                         has_entries('Total', is_(greater_than_or_equal_to(1)),
                                     'ItemCount', is_(greater_than_or_equal_to(1))))
-    
+
             res = self.testapp.post('/dataserver2/@@RebuildRecorderCatalog',
                                     status=200)
             assert_that(res.json_body,

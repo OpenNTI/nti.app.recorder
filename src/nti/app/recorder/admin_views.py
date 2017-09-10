@@ -16,6 +16,8 @@ from requests.structures import CaseInsensitiveDict
 from zope import component
 from zope import lifecycleevent
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
@@ -36,6 +38,8 @@ from nti.dataserver.authorization import ACT_NTI_ADMIN
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IShardLayout
 from nti.dataserver.interfaces import IDataserverFolder
+
+from nti.dataserver.metadata.index import get_metadata_catalog
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
@@ -252,32 +256,35 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
     def _indexables(self, recordable):
         raise NotImplementedError
     
-    def _process_meta(self, obj):
-        try:
-            from nti.metadata import queue_add
-            queue_add(obj)
-        except ImportError:
-            pass
+    @Lazy
+    def metadata(self):
+        return get_metadata_catalog()
 
     def __call__(self):
         intids = component.getUtility(IIntIds)
         # remove indexes
+        metadata = self.metadata
         catalog = self._catalog()
-        for index in list(catalog.values()):
+        for index in catalog.values():
             index.clear()
         # reindex
         seen = set()
+        items = dict()
         for host_site in get_all_host_sites():  # check all sites
             with current_site(host_site):
+                count = 0
                 for recordable in get_recordables():
                     for indexable in self._indexables(recordable):
                         doc_id = intids.queryId(indexable)
                         if doc_id is None or doc_id in seen:
                             continue
                         seen.add(doc_id)
+                        count += 1
                         catalog.index_doc(doc_id, indexable)
-                        self._process_meta(indexable)
+                        metadata.index_doc(doc_id, indexable)
+                items[host_site.__name__] = count
         result = LocatedExternalDict()
+        result[ITEMS] = items
         result[ITEM_COUNT] = result[TOTAL] = len(seen)
         return result
 
