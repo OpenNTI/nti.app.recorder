@@ -29,6 +29,8 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.externalization.view_mixins import BatchingUtilsMixin
 
+from nti.app.recorder import RecorderPathAdapter
+
 from nti.app.recorder.utils import parse_datetime
 
 from nti.common.string import is_true
@@ -280,8 +282,8 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
                             continue
                         seen.add(doc_id)
                         count += 1
-                        catalog.index_doc(doc_id, indexable)
-                        metadata.index_doc(doc_id, indexable)
+                        catalog.force_index_doc(doc_id, indexable)
+                        metadata.force_index_doc(doc_id, indexable)
                 items[host_site.__name__] = count
         result = LocatedExternalDict()
         result[ITEMS] = items
@@ -289,11 +291,12 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
         return result
 
 
-@view_config(permission=ACT_NTI_ADMIN)
+@view_config(context=IDataserverFolder)
+@view_config(context=RecorderPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
                request_method='POST',
-               context=IDataserverFolder,
+               permission=ACT_NTI_ADMIN,
                name='RebuildTransactionCatalog')
 class RebuildTransactionCatalogView(RebuildCatalogMixinView):
 
@@ -304,11 +307,12 @@ class RebuildTransactionCatalogView(RebuildCatalogMixinView):
         return get_transactions(recordable) or ()
 
 
-@view_config(permission=ACT_NTI_ADMIN)
+@view_config(context=IDataserverFolder)
+@view_config(context=RecorderPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
                request_method='POST',
-               context=IDataserverFolder,
+               permission=ACT_NTI_ADMIN,
                name='RebuildRecorderCatalog')
 class RebuildRecorderCatalogView(RebuildCatalogMixinView):
 
