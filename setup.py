@@ -7,6 +7,13 @@ entry_points = {
     ],
 }
 
+TESTS_REQUIRE = [
+    'nti.app.testing',
+    'nti.testing',
+    'zope.dottedname',
+    'zope.testrunner',
+]
+
 
 def _read(fname):
     with codecs.open(fname, encoding='utf-8') as f:
