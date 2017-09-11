@@ -123,13 +123,13 @@ class TestAdminViews(ApplicationLayerTest):
         gsm = component.getGlobalSiteManager()
         gsm.registerUtility(utility, IRecordables, "bleach")
         try:
-            res = self.testapp.post('/dataserver2/@@RebuildTransactionCatalog',
+            res = self.testapp.post('/dataserver2/recorder/@@RebuildTransactionCatalog',
                                     status=200)
             assert_that(res.json_body,
                         has_entries('Total', is_(greater_than_or_equal_to(1)),
                                     'ItemCount', is_(greater_than_or_equal_to(1))))
 
-            res = self.testapp.post('/dataserver2/@@RebuildRecorderCatalog',
+            res = self.testapp.post('/dataserver2/recorder/@@RebuildRecorderCatalog',
                                     status=200)
             assert_that(res.json_body,
                         has_entries('Total', is_(greater_than_or_equal_to(1)),
