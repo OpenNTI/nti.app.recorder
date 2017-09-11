@@ -23,6 +23,7 @@ setup(
     license='Apache',
     keywords='recorder pyramid',
     classifiers=[
+        'Framework :: Pyramid',
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Operating System :: OS Independent',
@@ -30,14 +31,19 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
+    url="https://github.com/NextThought/nti.app.recorder",
     zip_safe=True,
     packages=find_packages('src'),
     package_dir={'': 'src'},
     include_package_data=True,
     namespace_packages=['nti', 'nti.app'],
+    tests_require=TESTS_REQUIRE,
     install_requires=[
         'setuptools',
         'nti.recorder'
     ],
+    extras_require={
+        'test': TESTS_REQUIRE,
+    },
     entry_points=entry_points,
 )
