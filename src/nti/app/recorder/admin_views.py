@@ -90,10 +90,11 @@ def _resolve_objects(doc_ids, intids):
         yield obj
 
 
-@view_config(permission=ACT_NTI_ADMIN)
+@view_config(context=IDataserverFolder)
+@view_config(context=RecorderPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
-               context=IDataserverFolder,
+               permission=ACT_NTI_ADMIN,
                name='RemoveAllTransactionHistory')
 class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
 
@@ -125,10 +126,11 @@ class RemoveAllTransactionHistoryView(AbstractAuthenticatedView):
         return result
 
 
-@view_config(permission=ACT_NTI_ADMIN)
+@view_config(context=IDataserverFolder)
+@view_config(context=RecorderPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
-               context=IDataserverFolder,
+               permission=ACT_NTI_ADMIN,
                name='GetLockedObjects')
 class GetLockedObjectsView(AbstractAuthenticatedView, BatchingUtilsMixin):
 
@@ -140,7 +142,7 @@ class GetLockedObjectsView(AbstractAuthenticatedView, BatchingUtilsMixin):
 
     def __call__(self):
         values = self.readInput()
-        accept = values.get('accept') or values.get('mimeTypes') or u''
+        accept = values.get('accept') or values.get('mimeTypes') or ''
         accept = accept.split(',') if accept else ()
         if accept and '*/*' not in accept:
             accept = {e.strip().lower() for e in accept if e}
@@ -198,11 +200,12 @@ def username_search(search_term):
     return list(usernames)
 
 
-@view_config(permission=ACT_NTI_ADMIN)
+@view_config(context=IDataserverFolder)
+@view_config(context=RecorderPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
                request_method='GET',
-               context=IDataserverFolder,
+               permission=ACT_NTI_ADMIN,
                name='UserTransactionHistory')
 class UserTransactionHistoryView(AbstractAuthenticatedView):
 
