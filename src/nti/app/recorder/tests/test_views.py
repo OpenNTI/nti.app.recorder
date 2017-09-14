@@ -19,7 +19,7 @@ from nti.base.interfaces import ICreated
 
 from nti.dataserver.users import User
 
-from nti.externalization.oids import to_external_ntiid_oid
+from nti.ntiids.oids import to_external_ntiid_oid
 
 from nti.recorder.mixins import RecordableMixin
 
