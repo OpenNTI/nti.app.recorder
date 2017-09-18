@@ -17,7 +17,7 @@ from zope.annotation.interfaces import IAttributeAnnotatable
 
 from nti.base.interfaces import ICreated
 
-from nti.dataserver.users import User
+from nti.dataserver.users.users import User
 
 from nti.ntiids.oids import to_external_ntiid_oid
 
