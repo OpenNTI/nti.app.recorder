@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
@@ -22,14 +23,14 @@ from zc.catalog.index import ValueIndex
 
 from nti.app.recorder.generations import evolve3
 
+from nti.app.recorder.tests import SharedConfiguringTestLayer
+
+from nti.dataserver.tests import mock_dataserver
+
 from nti.recorder.index import IX_RECORDABLE
 from nti.recorder.index import get_transaction_catalog
 
 from nti.recorder.record import TransactionRecord
-
-from nti.app.recorder.tests import SharedConfiguringTestLayer
-
-from nti.dataserver.tests import mock_dataserver
 
 
 class TestEvolve3(unittest.TestCase):

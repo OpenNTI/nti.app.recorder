@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 import time
 from datetime import date
@@ -17,6 +16,8 @@ from six import string_types
 
 from zope.interface.common.idatetime import IDate
 from zope.interface.common.idatetime import IDateTime
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def is_valid_timestamp(ts):
