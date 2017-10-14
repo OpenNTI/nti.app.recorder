@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
@@ -15,7 +16,13 @@ from zope import interface
 
 from zope.annotation.interfaces import IAttributeAnnotatable
 
+from nti.app.testing.application_webtest import ApplicationLayerTest
+
+from nti.app.testing.decorators import WithSharedApplicationMockDS
+
 from nti.base.interfaces import ICreated
+
+from nti.dataserver.tests import mock_dataserver
 
 from nti.dataserver.users.users import User
 
@@ -28,12 +35,6 @@ from nti.recorder.record import get_transactions
 from nti.recorder.utils import record_transaction
 
 from nti.zodb.persistentproperty import PersistentPropertyHolder
-
-from nti.app.testing.application_webtest import ApplicationLayerTest
-
-from nti.app.testing.decorators import WithSharedApplicationMockDS
-
-from nti.dataserver.tests import mock_dataserver
 
 
 @interface.implementer(ICreated, IAttributeAnnotatable)
