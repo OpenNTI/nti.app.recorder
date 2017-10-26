@@ -26,6 +26,7 @@ from nti.recorder.index import get_transaction_catalog
 from nti.recorder.interfaces import get_recordables
 
 from nti.recorder.record import get_transactions
+from nti.recorder.record import has_transactions
 
 from nti.site.hostpolicy import get_all_host_sites
 
@@ -83,7 +84,9 @@ class RebuildTransactionCatalog(RebuildCatalogMixin):
         return get_transaction_catalog()
 
     def _indexables(self, recordable):
-        return get_transactions(recordable) or ()
+        if has_transactions(recordable):
+            return get_transactions(recordable) 
+        return ()
 
 
 class RebuildRecorderCatalog(RebuildCatalogMixin):
