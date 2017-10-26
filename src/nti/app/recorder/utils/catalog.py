@@ -71,7 +71,7 @@ class RebuildCatalogMixin(object):
                                          doc_id, type(recordable))
                         else:
                             count += 1
-                logger.info("%s object(s) indexed in site",
+                logger.info("%s object(s) indexed in site %s",
                             count, host_site.__name__)
                 items[host_site.__name__] = count
         return items
