@@ -15,13 +15,7 @@ from requests.structures import CaseInsensitiveDict
 from zope import component
 from zope import lifecycleevent
 
-from zope.cachedescriptors.property import Lazy
-
-from zope.component.hooks import site as current_site
-
 from zope.intid.interfaces import IIntIds
-
-from ZODB.POSException import POSError
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -34,6 +28,9 @@ from nti.app.recorder import RecorderPathAdapter
 
 from nti.app.recorder.utils import parse_datetime
 
+from nti.app.recorder.utils.catalog import RebuildRecorderCatalog
+from nti.app.recorder.utils.catalog import RebuildTransactionCatalog
+
 from nti.common.string import is_true
 
 from nti.dataserver.authorization import ACT_NTI_ADMIN
@@ -41,8 +38,6 @@ from nti.dataserver.authorization import ACT_NTI_ADMIN
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IShardLayout
 from nti.dataserver.interfaces import IDataserverFolder
-
-from nti.dataserver.metadata.index import get_metadata_catalog
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
@@ -60,12 +55,7 @@ from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecord
 from nti.recorder.interfaces import IRecordableContainer
 
-from nti.recorder.interfaces import get_recordables
-
-from nti.recorder.record import get_transactions
 from nti.recorder.record import remove_transaction_history
-
-from nti.site.hostpolicy import get_all_host_sites
 
 from nti.zodb import isBroken
 
@@ -256,46 +246,19 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
         return result
 
 
-class RebuildCatalogMixinView(AbstractAuthenticatedView):
-
-    def _catalog(self):
-        raise NotImplementedError
-
-    def _indexables(self, recordable):
-        raise NotImplementedError
-    
-    @Lazy
-    def metadata(self):
-        return get_metadata_catalog()
+@view_config(context=IDataserverFolder)
+@view_config(context=RecorderPathAdapter)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='POST',
+               permission=ACT_NTI_ADMIN,
+               name='RebuildTransactionCatalog')
+class RebuildTransactionCatalogView(AbstractAuthenticatedView,
+                                    RebuildTransactionCatalog):
 
     def __call__(self):
-        intids = component.getUtility(IIntIds)
-        # remove indexes
-        metadata = self.metadata
-        catalog = self._catalog()
-        for index in catalog.values():
-            index.clear()
-        # reindex
         seen = set()
-        items = dict()
-        for host_site in get_all_host_sites():  # check all sites
-            with current_site(host_site):
-                count = 0
-                for recordable in get_recordables():
-                    for indexable in self._indexables(recordable):
-                        doc_id = intids.queryId(indexable)
-                        if doc_id is None or doc_id in seen:
-                            continue
-                        try:
-                            seen.add(doc_id)
-                            catalog.force_index_doc(doc_id, indexable)
-                            metadata.force_index_doc(doc_id, indexable)
-                        except POSError:
-                            logger.error("Error while indexing object %s/%s", 
-                                         doc_id, type(recordable))
-                        else:
-                            count += 1
-                items[host_site.__name__] = count
+        items = RebuildTransactionCatalog.__call__(self, seen, True)
         result = LocatedExternalDict()
         result[ITEMS] = items
         result[ITEM_COUNT] = result[TOTAL] = len(seen)
@@ -308,27 +271,14 @@ class RebuildCatalogMixinView(AbstractAuthenticatedView):
                renderer='rest',
                request_method='POST',
                permission=ACT_NTI_ADMIN,
-               name='RebuildTransactionCatalog')
-class RebuildTransactionCatalogView(RebuildCatalogMixinView):
-
-    def _catalog(self):
-        return get_transaction_catalog()
-
-    def _indexables(self, recordable):
-        return get_transactions(recordable) or ()
-
-
-@view_config(context=IDataserverFolder)
-@view_config(context=RecorderPathAdapter)
-@view_defaults(route_name='objects.generic.traversal',
-               renderer='rest',
-               request_method='POST',
-               permission=ACT_NTI_ADMIN,
                name='RebuildRecorderCatalog')
-class RebuildRecorderCatalogView(RebuildCatalogMixinView):
+class RebuildRecorderCatalogView(AbstractAuthenticatedView,
+                                 RebuildRecorderCatalog):
 
-    def _catalog(self):
-        return get_recorder_catalog()
-
-    def _indexables(self, recordable):
-        return (recordable,)
+    def __call__(self):
+        seen = set()
+        items = RebuildRecorderCatalog.__call__(self, seen, True)
+        result = LocatedExternalDict()
+        result[ITEMS] = items
+        result[ITEM_COUNT] = result[TOTAL] = len(seen)
+        return result
