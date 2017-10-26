@@ -5,6 +5,9 @@ entry_points = {
     "z3c.autoinclude.plugin": [
         'target = nti.app',
     ],
+    'console_scripts': [
+        "nti_rebuild_recorder_catalog = nti.app.recorder.scripts.nti_rebuild_recorder_catalog:main",
+    ]
 }
 
 TESTS_REQUIRE = [
