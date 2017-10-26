@@ -19,7 +19,7 @@ from zope.intid.interfaces import IIntIds
 from nti.recorder.index import install_recorder_catalog
 from nti.recorder.index import install_transaction_catalog
 
-generation = 3
+generation = 4
 
 logger = __import__('logging').getLogger(__name__)
 
