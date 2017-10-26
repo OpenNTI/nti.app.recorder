@@ -44,8 +44,10 @@ def _sync_library():
 def _process_args(args):
     _sync_library()
     if args.recorder:
+        logger.info("Rebuilding recorder catalog...")
         builder = RebuildRecorderCatalog()
     elif args.transaction:
+        logger.info("Rebuilding transaction catalog...")
         builder = RebuildTransactionCatalog()
     else:
         builder = None
@@ -87,9 +89,6 @@ def main():
     env_dir = os.getenv('DATASERVER_DIR')
     if not env_dir or not os.path.exists(env_dir) and not os.path.isdir(env_dir):
         raise IOError("Invalid dataserver environment root directory")
-
-    if not args.site:
-        raise ValueError("Application site not specified")
 
     conf_packages = ('nti.appserver',)
     context = create_context(env_dir, with_library=True)
