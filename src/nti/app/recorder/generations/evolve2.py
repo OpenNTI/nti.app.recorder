@@ -20,6 +20,8 @@ from zope.index.topic.interfaces import ITopicFilteredSet
 
 from zope.intid.interfaces import IIntIds
 
+from zc.catalog.index import NormalizationWrapper
+
 from zc.catalog.interfaces import IIndexValues
 
 from nti.dataserver.interfaces import IDataserver
@@ -61,6 +63,8 @@ class MockDataserver(object):
 def _get_ids(catalog):
     result = set()
     for name, index in catalog.items():
+        if isinstance(index, NormalizationWrapper):
+            index = index.index
         try:
             if IIndexValues.providedBy(index):
                 result.update(index.ids())
