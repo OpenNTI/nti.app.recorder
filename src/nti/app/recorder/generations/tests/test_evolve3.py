@@ -5,21 +5,21 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# disable: accessing protected members, too many methods
-# pylint: disable=W0212,R0904
+# pylint: disable=protected-access,too-many-public-methods
 
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import assert_that
 
-import fudge
 import unittest
+
+import fudge
+
+from zc.catalog.index import ValueIndex
 
 from zope import component
 
 from zope.intid.interfaces import IIntIds
-
-from zc.catalog.index import ValueIndex
 
 from nti.app.recorder.generations import evolve3
 

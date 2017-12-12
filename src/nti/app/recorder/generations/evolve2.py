@@ -8,6 +8,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from zc.catalog.index import NormalizationWrapper
+
+from zc.catalog.interfaces import IIndexValues
+
 from zope import component
 from zope import interface
 
@@ -19,10 +23,6 @@ from zope.index.topic import TopicIndex
 from zope.index.topic.interfaces import ITopicFilteredSet
 
 from zope.intid.interfaces import IIntIds
-
-from zc.catalog.index import NormalizationWrapper
-
-from zc.catalog.interfaces import IIndexValues
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -71,10 +71,11 @@ def _get_ids(catalog):
             elif IKeywordIndex.providedBy(index):
                 result.update(index.ids())
             elif isinstance(index, TopicIndex):
+                # pylint: disable=protected-access
                 for filter_index in index._filters.values():
                     if ITopicFilteredSet.providedBy(filter_index):
                         result.update(filter_index.getIds())
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.error('Errors getting ids from index "%s" (%s) in catalog %s',
                          name, index, catalog)
     return result

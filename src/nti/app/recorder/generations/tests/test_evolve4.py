@@ -5,15 +5,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# disable: accessing protected members, too many methods
-# pylint: disable=W0212,R0904
+# pylint: disable=protected-access,too-many-public-methods
 
 from hamcrest import is_
 from hamcrest import contains
 from hamcrest import assert_that
 
-import fudge
 import unittest
+
+import fudge
 
 from persistent import Persistent
 
@@ -55,7 +55,7 @@ class TestEvolve3(unittest.TestCase):
         catalog = get_recorder_catalog()
         catalog.force_index_doc(doc_id, record)
         # set mimetype and migrate
-        record.mimeType = 'foo/foo'
+        record.mimeType = 'foo/foo'  # pylint: disable=attribute-defined-outside-init
         context = fudge.Fake().has_attr(connection=conn)
         count = evolve4.do_evolve(context)
         assert_that(count, is_(1))

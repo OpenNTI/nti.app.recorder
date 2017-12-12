@@ -5,8 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# disable: accessing protected members, too many methods
-# pylint: disable=W0212,R0904
+# pylint: disable=protected-access,too-many-public-methods
 
 from hamcrest import is_
 from hamcrest import none
@@ -85,7 +84,7 @@ class TestAdminViews(ApplicationLayerTest):
             current_transaction = mock_dataserver.current_transaction
             current_transaction.add(ichigo)
             self.ds.root['ichigo'] = ichigo
-            ichigo.creator = user
+            ichigo.creator = user  # pylint: disable=attribute-defined-outside-init
             record = record_transaction(ichigo,
                                         principal=user,
                                         type_=u"Activation",
@@ -110,7 +109,7 @@ class TestAdminViews(ApplicationLayerTest):
             current_transaction = mock_dataserver.current_transaction
             current_transaction.add(ichigo)
             self.ds.root['ichigo'] = ichigo
-            ichigo.creator = user
+            ichigo.creator = user  # pylint: disable=attribute-defined-outside-init
             record_transaction(ichigo, principal=user,
                                type_=u"Activation",
                                ext_value={u'bankai': True})

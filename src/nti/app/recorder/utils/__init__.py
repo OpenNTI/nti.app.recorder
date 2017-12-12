@@ -37,7 +37,7 @@ def parse_datetime(t):
     elif isinstance(t, string_types):
         try:
             result = IDateTime(t)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             result = IDate(t)
         result = time.mktime(result.timetuple())
     elif isinstance(t, (date, datetime)):
