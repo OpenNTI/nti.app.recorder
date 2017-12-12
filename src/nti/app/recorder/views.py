@@ -10,15 +10,15 @@ from __future__ import absolute_import
 
 from requests.structures import CaseInsensitiveDict
 
-from zope import component
-from zope import lifecycleevent
-
-from zope.intid.interfaces import IIntIds
-
 from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
+
+from zope import component
+from zope import lifecycleevent
+
+from zope.intid.interfaces import IIntIds
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
@@ -83,6 +83,7 @@ class AbstractRecordableObjectView(AbstractAuthenticatedView):
 class SyncLockObjectView(AbstractRecordableObjectView):
 
     def _do_call(self):
+        # pylint: disable=no-member
         self.context.lock()
         lifecycleevent.modified(self.context)
         return self.context
@@ -96,6 +97,7 @@ class SyncLockObjectView(AbstractRecordableObjectView):
 class SyncUnlockObjectView(AbstractRecordableObjectView):
 
     def _do_call(self):
+        # pylint: disable=no-member
         self.context.unlock()
         lifecycleevent.modified(self.context)
         return self.context
@@ -109,6 +111,7 @@ class SyncUnlockObjectView(AbstractRecordableObjectView):
 class ChildOrderLockObjectView(AbstractRecordableObjectView):
 
     def _do_call(self):
+        # pylint: disable=no-member
         self.context.childOrderLock()
         lifecycleevent.modified(self.context)
         return self.context
@@ -122,6 +125,7 @@ class ChildOrderLockObjectView(AbstractRecordableObjectView):
 class ChildOrderUnlockObjectView(AbstractRecordableObjectView):
 
     def _do_call(self):
+        # pylint: disable=no-member
         self.context.childOrderUnlock()
         lifecycleevent.modified(self.context)
         return self.context
@@ -135,6 +139,7 @@ class ChildOrderUnlockObjectView(AbstractRecordableObjectView):
 class SyncLockObjectStatusView(AbstractRecordableObjectView):
 
     def _do_call(self):
+        # pylint: disable=no-member
         result = LocatedExternalDict()
         result['Locked'] = self.context.isLocked()
         if IRecordableContainer.providedBy(self.context):
@@ -185,6 +190,7 @@ class TransactionHistoryView(AbstractRecordableObjectView,
 class RemoveTransactionHistoryView(AbstractRecordableObjectView):
 
     def __call__(self):
+        # pylint: disable=no-member
         result = LocatedExternalDict()
         if IRecordableContainer.providedBy(self.context):
             self.context.child_order_unlock()
@@ -228,6 +234,7 @@ class TrimTransactionHistoryView(AbstractRecordableObjectView,
         items = history.query(start_time=startTime, end_time=endTime)
         # remove records
         for item in items:
+            # pylint: disable=too-many-function-args
             history.remove(item)
         # return
         result = LocatedExternalDict()
@@ -253,6 +260,7 @@ class TransactionRecordGetView(AbstractRecordableObjectView):
 class TransactionRecordDeleteView(AbstractRecordableObjectView):
 
     def _do_call(self):
+        # pylint: disable=no-member
         del self.context.__parent__[self.context.__name__]
         result = hexc.HTTPNoContent()
         return result
@@ -288,6 +296,7 @@ class UserTransactionHistoryView(AbstractAuthenticatedView,
         items = result[ITEMS] = []
 
         # query catalog
+        # pylint: disable=no-member
         catalog = get_transaction_catalog()
         query = {
             IX_PRINCIPAL: {'any_of': (self.context.username,)},

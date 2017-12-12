@@ -12,13 +12,13 @@ import six
 
 from requests.structures import CaseInsensitiveDict
 
+from pyramid.view import view_config
+from pyramid.view import view_defaults
+
 from zope import component
 from zope import lifecycleevent
 
 from zope.intid.interfaces import IIntIds
-
-from pyramid.view import view_config
-from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
@@ -185,6 +185,7 @@ def username_search(search_term):
     min_inclusive, max_exclusive = _make_min_max_btree_range(search_term)
     dataserver = component.getUtility(IDataserver)
     _users = IShardLayout(dataserver).users_folder
+    # pylint: disable=no-member
     usernames = _users.iterkeys(min_inclusive,
                                 max_exclusive,
                                 excludemax=True)
@@ -256,7 +257,7 @@ class UserTransactionHistoryView(AbstractAuthenticatedView):
 class RebuildTransactionCatalogView(AbstractAuthenticatedView,
                                     RebuildTransactionCatalog):
 
-    def __call__(self):
+    def __call__(self):  # pylint: disable=signature-differs
         seen = set()
         items = RebuildTransactionCatalog.__call__(self, seen, True)
         result = LocatedExternalDict()
@@ -275,7 +276,7 @@ class RebuildTransactionCatalogView(AbstractAuthenticatedView,
 class RebuildRecorderCatalogView(AbstractAuthenticatedView,
                                  RebuildRecorderCatalog):
 
-    def __call__(self):
+    def __call__(self):  # pylint: disable=signature-differs
         seen = set()
         items = RebuildRecorderCatalog.__call__(self, seen, True)
         result = LocatedExternalDict()

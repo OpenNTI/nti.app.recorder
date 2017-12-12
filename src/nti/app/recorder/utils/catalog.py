@@ -64,9 +64,10 @@ class RebuildCatalogMixin(object):
                             continue
                         seen.add(doc_id)
                         try:
-                            catalog.force_index_doc(doc_id, indexable)
+                            catalog.index_doc(doc_id, indexable)
                             if metadata:
-                                self.metadata_catalog.force_index_doc(doc_id, indexable)
+                                # pylint: disable=no-member
+                                self.metadata_catalog.index_doc(doc_id, indexable)
                         except POSError:
                             logger.error("Error while indexing object %s/%s",
                                          doc_id, type(recordable))

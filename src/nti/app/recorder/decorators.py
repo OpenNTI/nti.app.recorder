@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from ZODB.interfaces import IConnection
+
 from zope import component
 from zope import interface
 
@@ -18,8 +20,6 @@ from zope.intid.interfaces import IIntIds
 from zope.location.interfaces import ILocation
 
 from zope.mimetype.interfaces import IContentTypeAware
-
-from ZODB.interfaces import IConnection
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
@@ -61,7 +61,7 @@ class _TransactionRecordDecorator(AbstractAuthenticatedRequestAwareDecorator):
         if ext_value is not None:
             try:
                 result['ExternalValue'] = decompress(ext_value)
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 pass
         recordable = find_interface(context, IRecordable, strict=False)
         # gather some minor info
@@ -100,6 +100,7 @@ class _RecordableDecorator(AbstractAuthenticatedRequestAwareDecorator):
         return (      self._acl_decoration
                 and bool(self.authenticated_userid)
                 # Some objects have intids, but do not have connections (?).
+                # pylint: disable=no-member
                 and (   IConnection(context, None) is not None
                      or getattr(context, self.intids.attribute, None))
                 and has_permission(ACT_UPDATE, context, self.request))
