@@ -43,8 +43,7 @@ class TransactionRecordACLProvider(object):
     @Lazy
     def __acl__(self):
         aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self))]
-        creator = self.context.creator or self.context.username
-        creator = IPrincipal(creator, None)
+        creator = IPrincipal(self.context.creator, None)
         if creator is not None:
             aces.append(ace_allowing(creator, ALL_PERMISSIONS, type(self)))
         return acl_from_aces(aces)
